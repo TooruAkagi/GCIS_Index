@@ -8,10 +8,10 @@
 #include <filesystem>
 
 #define DEBUGFLAG 0 //1なら工程を全て表示
-#define OVERTRANSFORM 8 //指定された回数は，文法のサイズが巨大化しても必ず変換する
+#define OVERTRANSFORM 0 //指定された回数は，文法のサイズが巨大化しても必ず変換する
 #define TRANSTIMES 99 //この回数だけ変換したら勝手に終わる
 
-char fname[] = "../datalist/english.001.2"; //input file name
+char fname[] = "../datalist/commoncrawl.ascii.txt"; //input file name
 //char fname[] = "idx4axkr_sh2.cpp";
 int (*nextsort)[3];
 // int nextsort[65535][3];

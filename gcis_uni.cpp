@@ -346,11 +346,11 @@ int psread(int p,bool *ar,int D2start,int D2end,int basekey){
 }
 
 void uhdisp(int tgm){
-        printf("\n%d:",tgm);
-        int D2start = getd2(tgm);
-        int D2end = getd2(tgm+1);
-        int tgm3 = gethead(tgm);
-        psread(tgm,k,D2start,D2end,tgm3);
+    printf("\n%d:",tgm);
+    int D2start = getd2(tgm);
+    int D2end = getd2(tgm+1);
+    int tgm3 = gethead(tgm);
+    psread(tgm,k,D2start,D2end,tgm3);
 }
 
 int rsbuild(bool *ar,int *arsub,unsigned short int *arsub2,int t2,int newn){
@@ -368,7 +368,8 @@ int rsbuild(bool *ar,int *arsub,unsigned short int *arsub2,int t2,int newn){
                 if(i*spursesuu+j>tmpmax2){tmpmax2 = i*spursesuu+j;}
                 //printf("\narsub2[%d] = %d",i*purses+j,valu);
                 //bwrite(arsub2,(i*spursesuu+j)*10,10,rank1(ar,newn-ky-1,ky)); //最後の数ビット
-                arsub[t2] = pastrank + valu + 1; //絶対超えない数字
+                arsub[t2] = arsub[t2-1] + valu + 1; //絶対超えない数字(本当か？)
+                printf("\nu2[%d]=%d(%d)",t2,arsub[t2],valu+1);
                 if(t2>tmpmax){tmpmax = t2;}
                 break; //末尾はブレイク
             }
@@ -385,6 +386,7 @@ int rsbuild(bool *ar,int *arsub,unsigned short int *arsub2,int t2,int newn){
             if(i>0){pastrank +=arsub[i-1];}
             pastrank += rank1(ar,spurse,ky+(lpurse-spurse));
             arsub[i]=pastrank;
+            printf("\nu2[%d]=%d",i,arsub[i]);
             if(i>tmpmax){tmpmax = i;}
         }
     }
@@ -393,236 +395,6 @@ int rsbuild(bool *ar,int *arsub,unsigned short int *arsub2,int t2,int newn){
     printf("newn = %d : rankselectサイズ :%d,%d\n",newn,t2*4,kad*2);
     printf("入力最大位置[%d,%d]",tmpmax,tmpmax2);
     return t2*4 + kad*2;
-}
-
-int rpsck(int *m,int starti,int mlen,int round,int *e2){
-    int t = 1;
-    int eset = 0;
-    int earray[2];
-    int i = 0;
-    int c = 0;
-    int rofs=0;
-    if(round>1){rofs=dc2s[round-1];}
-    //printf("\n<rofs[%d] = %d>",round,rofs);
-    while(t>=0){
-        int l = e2[t]+dc2s[round];  
-        //printf("\n[%d+%d=%d]を見る",e2[t],dc2s[round],l);
-        int su = getd2(l);
-        int eu = getd2(l+1);
-        //printf("\nsu,eu =(%d,%d)",su,eu);
-        //uhdisp(l,d2under,d2top,d2topsub,d2topsub2,k,k3,k3sub,k3sub2,36000000);
-        //for(int h = 0;h<mlen;h++){printf("(%d)",m[starti+h]-rofs);}
-        int basekey = gethead(l)+rofs;
-        //printf("\nnew key : %d(%d)",basekey,basekey-rofs);
-        if(eset<2){
-            earray[1]=earray[0];earray[0]=basekey;eset++;
-        }
-        else{
-            if(basekey==m[starti+c]){c++;}
-            else{c=0;earray[1]=earray[0];earray[0]=basekey;
-                //printf("[%d != %d]",basekey-rofs,m[starti+c]-rofs);
-            }
-        }
-        int a = gread(su,k);
-        su += 2*loga(a)-1;
-        if(l!=exceptr[round]){
-            if(a==1){a=99999999;}
-        }
-        while(1){
-            //printf("\n[[0]%d / [1]%d]",earray[0],earray[1]);
-            if(su>=eu){break;}
-            int yp = gread(su,k)-1;a--;
-            if(a>0){basekey+=yp;}else{basekey-=yp;}
-            //printf("\nnew key : %d(%d)",basekey,basekey-rofs);
-            su += 2*loga(yp+1)-1;
-            if(eset==2){
-                //printf("[%d =?= %d]",basekey,m[starti+c]);
-                if(basekey==m[starti+c]){c++;}
-                else{
-                    c=0;earray[1]=earray[0];earray[0]=basekey;
-                }
-            }
-            else{
-                earray[1]=earray[0];earray[0]=basekey;eset++;
-            }
-        }
-        //printf("\neset = %d / c = %d",eset,c);
-        if(eset==2 && c==mlen){
-            //printf("round%dは完全一致",round);
-            for(i=0;i<2;i++){e2[i]=earray[i]-rofs;}
-            //for(int rh=0;rh<2;rh++){printf("\n<e2[%d] = %d(-%d)>",rh,e2[rh],rofs);}
-            return 1;
-        }
-        //printf("\n%d文字一致",c);
-        //for(int rh=0;rh<2;rh++){printf("\n<%d>",earray[rh]);}
-        t--;
-    }
-    return 0;
-}
-
-int psck(int *m,int starti,int mlen,int round,int *e){
-    //printf("mlen[%d]文字チェック",mlen);
-    int t = 0;
-    int eset = 0;
-    int earray[3];
-    int i = 0;
-    int c = 0; //合ってる文字数
-    int rofs=0;
-    if(round>1){rofs=dc2s[round-1];}
-    while(t<3){
-        if(e[t]==-1){return 0;}
-        int l = e[t]+dc2s[round];
-        //printf("\n[%d+%d=%d]を見る",e[t],dc2s[round],l);
-        int su = getd2(l);
-        int eu = getd2(l+1);
-        //printf("\nsu,eu =(%d,%d)",su,eu);
-        //uhdisp(l,d2under,d2top,d2topsub,d2topsub2,k,k3,k3sub,k3sub2,36000000);
-        int basekey = gethead(l)+rofs;
-        if(c<mlen){
-            if(basekey==m[starti+c]){c++;}
-            else{
-                //printf("ここで失敗[%d != %d]",basekey,m[starti+c]);
-                return 0;}
-        }
-        else{
-            //printf("\ne[%d]=%d",eset,basekey);
-            earray[eset] = basekey;eset++;
-        }
-        int a = gread(su,k);
-        //printf("/%d/",2*loga(a)-1);
-        su += 2*loga(a)-1;
-        if(a==1){a=99999999;}
-        while(eset<3){  
-            if(su>=eu){break;}
-            int yp = gread(su,k)-1;a--;
-            if(a>0){basekey+=yp;}else{basekey-=yp;}
-            su += 2*loga(yp+1)-1;
-            if(c<mlen){
-                //printf("[%d,%d]",basekey,m[starti+c]);
-                if(basekey==m[starti+c]){c++;}
-                else{c=0;return 0;}
-            }
-            else{
-                //printf("\ne[%d]=%d",eset,basekey);
-                earray[eset] = basekey;eset++;
-            }
-        }
-        if(eset==3){
-            //printf("完璧です");
-            for(i=0;i<3;i++){e[i]=earray[i]-rofs;}
-            return 1;
-        }
-        //printf("\n%d文字一致 : %d文字e[]追加",c,eset);
-        t++;
-    }
-    return 0;
-}
-
-int roundck(int *m,int round,int *Rs,int *Ls,int *B1,int *B2,int *e,int *e2){
-    //printf("\n<round %d>",round);
-    //printf("チェック<%d><%d>",e2[0],e2[1]);
-    if(rand()%1000==0){exit(6);}
-    int g = psck(m,Rs[round],B2[round],round,e);
-    if(g==0){return 0;} //mismatch
-    g = rpsck(m,Ls[round],B1[round],round,e2);
-    if(g==0){return 0;}//mismatch
-    return 1;
-}
-
-int look(int *posi,int *nem,int *rev,int *leg,int *rc,int round,int t){
-    //if(rand()%19==0){exit(6);}
-    //printf("\nlook(%d,%d,%d,%d,%d,%d,%d)",posi[round],nem[round],rev[round],rc[round],leg[round],round,t);
-    if(loops<=round){hh=0;return -1;}
-    int i = nem[round]+dc2s[round];
-    if(t==0){hh--;return i;}
-    if(posi[round]<0 && nem[round]>=0){
-        posi[round] = getd2(i);
-        rev[round] = getd2(i+1);
-        rc[round] = gethead(i);
-        //printf("[%d](%d,%d)",i,posi[round],rev[round]);
-        leg[round] = gread(posi[round],k);posi[round]+=loga(leg[round])*2-1;
-        if(i!=exceptr[round]){
-            if(leg[round]==1){leg[round]=99999999;}
-        }
-        if(t==1){
-            rc[round]+=dc2s[round-1];
-            return rc[round];
-        }
-        nem[round-1] = rc[round];
-        hh++;
-        return look(posi,nem,rev,leg,rc,round-1,t-1);        
-    }
-    if(posi[round]<rev[round]){
-        int y = gread(posi[round],k)-1;
-        if(leg[round]<=1){rc[round]-=y;}else{rc[round] += y;}
-        posi[round]+=loga(y+1)*2-1;
-        leg[round]--;
-        if(t==1){
-            return rc[round];
-        }
-        nem[round-1] = rc[round];
-        hh++;
-        return look(posi,nem,rev,leg,rc,round-1,t-1);        
-    }
-    else{
-        nem[round]=-1;posi[round]=-1;hh--;
-        return look(posi,nem,rev,leg,rc,round+1,t+1);
-    }
-}
-
-int ckcore(int *e3,int *m,int starti,int mlen){
-    for(int i = 0;i<mlen;i++){if(m[starti+i]!=e3[i+2]){return 0;}}
-    return 1;
-}
-
-int pscmpr(bool *ar,bool *ar2,int start,int start2,int l,int bl,int plen,int y,int a){ //分割2つの長さをlまで比べる．
-    int od = 0;
-    int key = 0;
-    int len = 0;
-    int rt = l;
-    if(a<l){rt = a;}
-    int readcount = 0;
-    int x;int i;
-    for(i = 0;i<rt;i++){
-        if(readcount==y && y!=0 && od==1){return 1;}
-        if(readcount==bl && bl!=0 && od==2){return 0;}
-        if(ar[start+i]!=ar2[start2+i]){
-            if(key==0){
-                if(ar[start+i]==0){x = 1;}
-                else{x = 0;}
-            }
-            if(key==1){
-                if(ar[start+i]==0){x=0;}
-                else{x=1;}
-            }
-            if(od==3){x = (x+1)%2;}
-            if(od==1){return 0;}
-            if(od==2){return 1;}
-            return x;
-        }
-        if((ar[start+i] == 1) && key == 0){len+=1;key=1;}
-        if(key==0){len++;}
-        else{
-            len--;
-            if(len==0){
-                readcount++;
-                key=0;
-                if(readcount==y){od+=2;}
-                if(readcount==bl){od+=1;}
-                if(readcount>=plen){break;}
-                if(od==1){
-                    return 0;}
-                if(od==2){
-                    if(i+1==a){return 0;}
-                    return 1;
-                }
-            }
-        }
-    }
-    if(a<l){return 0;}
-    if(a>l){return 1;}
-    if(a==l){return 2;}
-    return 2;
 }
 
 int pscheck(int *m,int start,int plen, int round){ //完全一致を探す
@@ -641,38 +413,7 @@ int pscheck(int *m,int start,int plen, int round){ //完全一致を探す
         printf("\nstart:%d/%d\n",posup,posbt);
         uhdisp(posup);
         uhdisp(posbt);
-    //printf("\nposbt / posup = %d / %d (%d,%d)",posbt,posup,cc2s[round],cc2s[round+1]);
-    int pos = 0;
-    while(1){
-        pos = posup + (posbt-posup)/2;
-        b = select0(d2top,d2topsub,d2topsub2,pos+1,Sizelist[9],Sizelist[5],Sizelist[6]);
-        b = srank1(b,d2top,d2topsub,d2topsub2,Sizelist[5],Sizelist[6]); //その位置までの1の数 = 開始文字.
-        c = bread(d2under,pos*6,6);
-        d = b*64+c;
-        c = gread(d,k);d+=loga(c)*2-1;
-            a = select0(d2top,d2topsub,d2topsub2,pos+2,Sizelist[9],Sizelist[5],Sizelist[6]);
-            a = srank1(a,d2top,d2topsub,d2topsub2,Sizelist[5],Sizelist[6]);
-            a*=64;a+=bread(d2under,(pos+1)*6,6);a-=d;
-        //printf("<check %d>",pos);
-        b = pscmpr(k,bitlet,d,0,kad,c-1,plen-1,y-1,a);
-        if(b==2){
-            a = select0(d2top,d2topsub,d2topsub2,pos+2,Sizelist[9],Sizelist[5],Sizelist[6]);
-            a = srank1(a,d2top,d2topsub,d2topsub2,Sizelist[5],Sizelist[6]);
-            a*=64;a+=bread(d2under,(pos+1)*6,6);
-            if(a>d+kad){b=1;}
-            if(a<=d+kad){b=pos;break;}
-        }
-        if(b==0){posup=pos;} //posupは少なくとも違う
-        if(b==1){posbt=pos;} //posbtは少なくとも違う
-        if(posbt-posup<2){
-            printf("\nit doesn't exist.\n");pos=-1;
-            uhdisp(posup);
-            uhdisp(posbt);
-            break;
-        }
-    }
-    if(pos==-1){exit(6);}
-    return pos;
+    return 0;
 }
 
 int ptrans(int *B1,int *B2,int *B3,int *Ls,int *Rs,int startm,int *m,int mrlen,int round){

@@ -8,13 +8,13 @@
 #include <vector>
 
 #define MMODE 3
-#define MLONG 100
+#define MLONG 10000
 #define MREP 20
-#define MSTART 9061225
+#define MSTART 45691686
 #define MRANDRANGE 1
-#define MRANDBASE 1000
-#define CHECKFLAG 0 //これが1の場合は，結果が全部本当に正しいかをファイルをひらきながら全部チェックする
-#define DEBUGFLAG 0 //1ならデバッグしながら検索する
+#define MRANDBASE 10000
+#define CHECKFLAG 1 //これが1の場合は，結果が全部本当に正しいかをファイルをひらきながら全部チェックする
+#define DEBUGFLAG 1 //1ならデバッグしながら検索する
 //MMODE = 
 // 0 : query.txtの中の文字列を照合
 // 1 : qnameで指定されているファイルの中からランダムに MLONG 文字の文字列を選択し，
@@ -198,19 +198,23 @@ int sranknew0(int c,unsigned char *u,int *u2,unsigned short int *u3,int t2,int t
 }
 
 int selectnew1(unsigned char *u,int *u2,unsigned short int *u3,int c,int n,int t2,int t3){ //k番目の1を探す．
-    //printf("\n[%d]番目の1を探す(%d)",c,u2[0]);
+    //printf("\n[%d]番目の1を探す(%d)[%d-%d]",c,n,t2,t3);
+    //for(int o = 0;o<t2;o++){printf("[%d:%d]",o,u2[o]);}
     int i = 0;
     int j = 0;
     int l = 0;
     int hmax = t2-1;int hmin = 0;
     if(u2[0]<c){
-        while(hmax>hmin+1){
+        while(hmax>hmin+1){;
             i = (hmax+hmin)/2;
+            //printf("\n[%d ~~ %d] >> %d",hmax,hmin,i);
             if(u2[i]>=c){hmax = i-1;}
             else{hmin = i;}
         }
+        //printf("\n通過[%d ~~ %d] >> %d",hmax,hmin,i);
         if(u2[hmax]>=c){i = hmin;hmax = hmin-1;}
         else{i=hmax;hmin = hmax;}
+        //printf("\nl = %d(u2[%d])",u2[i],i);
         l = u2[i];
         i++;
     }
@@ -218,15 +222,18 @@ int selectnew1(unsigned char *u,int *u2,unsigned short int *u3,int c,int n,int t
     int ofi = i*spursesuu;
     j=0; //2回目のloglog探索
     hmin = 0;hmax = spursesuu-1;
-    if(t2-1 == i){hmax = t3-1;}
+    if(t2-1 == i){hmax = (t3-1)%spursesuu;}
     while(hmax>hmin+1){
         j = (hmax+hmin)/2;
+        //printf("\n[%d ~ %d] >> %d",hmax,hmin,j);
         if(u3[ofi+j]>=c-e){hmax = j-1;}
         else{hmin = j;}
     }
+    //printf("\n通過[%d ~ %d] >> %d",hmax,hmin,j);
     if(u3[ofi+hmax]>=c-e){j = hmin;}else{j = hmax;}
     if(j==spursesuu){j=spursesuu-1;}
     l = u3[ofi+j];
+    //printf("\nl = %d(+%d)(u3[%d > %d-%d])",l,u3[ofi+j],ofi+j,ofi,j);
     e += l;
     for(int p=i*lpurse+j*spurse;p<n;p++){
         if(e+rankct[u[p/8]][7]<c){
@@ -238,6 +245,7 @@ int selectnew1(unsigned char *u,int *u2,unsigned short int *u3,int c,int n,int t
             }
         }
     }
+    printf("到達");
     return n+1;
 }
 
@@ -391,10 +399,6 @@ int rpsck(int *m,int *Ls,int *B1,int *e2,int round){
     if(x.size()<mlen){
         if(DEBUGFLAG==1){printf("\n長さにより左が確実に不一致");}
         return -1;}
-    if(DEBUGFLAG==1){
-        printf("open -> [%d] :",l);
-        printf("Debug[%d文字,%d / %d/%d]",x.size(),mlen,starti+mlen-1-i,x.size()-1-i);
-    }
     int rofs=0;if(round>1){rofs=dc2s[round-1];}
     for(i = 0;i<mlen;i++){
         if(x[x.size()-1-i]+rofs!=m[starti+mlen-1-i]){
@@ -444,7 +448,6 @@ int psck(int *m,int *Rs,int *B2,int *e,int round){
     //if(gate==16){printf("?_[%d][%d][%d]",a1[0],a1[1],a1[2]);}
     for(int i=0;i<3;i++){
         int l = e[i];if(l<0){break;}
-        if(DEBUGFLAG==1){printf("\nopen -> [%d] :",l);}
         std::vector<int> x;
         xdisp(x,l);
         for(int j = 0;j<x.size();j++){
@@ -453,7 +456,6 @@ int psck(int *m,int *Rs,int *B2,int *e,int round){
                      if(DEBUGFLAG==1){printf("round %d で右不一致(%d !=%d)",round,x[j]+rofs,m[starti+cnt]);}
                     return -1;
                 }
-                if(DEBUGFLAG==1){printf("hit[%d(%d)]",x[j]+rofs,rofs);}
                 cnt++;
             }
             else{
@@ -472,87 +474,6 @@ int psck(int *m,int *Rs,int *B2,int *e,int round){
     //if(gate==16){printf("?_[%d][%d][%d] -> [%d][%d][%d]",a1[0],a1[1],a1[2],e[0],e[1],e[2]);exit(4);}
     e[0] = a1[0];e[1] = a1[1];e[2] = a1[2];
     return psck(m,Rs,B2,e,round-1);
-}
-
-int look(int *posi,int *nem,int *rev,int *leg,int *rc,int round,int t){
-    //printf("\nlook(%d,%d,%d,%d)",nem[round],rev[round],round,t);
-    //if(rand()%10000000==0){exit(3);}
-    if(loops<=round){hh=0;return -1;}
-    int i = nem[round]+dc2s[round];
-    if(t==0){hh--;return i;}
-    //printf("\n[i]%d =%d + %d /%d",i,nem[round],dc2s[round],round);
-    if(posi[round]<0 && nem[round]>=0){
-        posi[round] = getd2(i);
-        rev[round] = getd2(i+1);
-        rc[round] = gethead(i);
-        leg[round] = gread(posi[round],k);posi[round]+=loga(leg[round])*2-1;
-        if(i!=exceptr[round]){
-            if(leg[round]==1){leg[round]=99999999;}
-        }
-        if(t==1){
-            rc[round]+=dc2s[round-1];
-            return rc[round];
-        }
-        nem[round-1] = rc[round];
-        hh++;
-        return look(posi,nem,rev,leg,rc,round-1,t-1);        
-    }
-    if(posi[round]<rev[round]){
-        int y = gread(posi[round],k)-1;
-        if(leg[round]<=1){rc[round]-=y;}else{rc[round] += y;}
-        posi[round]+=loga(y+1)*2-1;
-        leg[round]--;
-        if(t==1){
-            return rc[round];
-        }
-        nem[round-1] = rc[round];
-        hh++;
-        return look(posi,nem,rev,leg,rc,round-1,t-1);        
-    }
-    else{
-        nem[round]=-1;posi[round]=-1;hh--;
-        return look(posi,nem,rev,leg,rc,round+1,t+1);
-    }
-}
-
-int ckcore(int *e3,int *m,int starti,int mlen,int *kmpc,int msta,int upc){
-    //u3[msta]から判定を行う
-    //compare (1)from [starti], length[mlen] in m / (2) e3,from position 2.
-    //e3[0][1] == for checking leftside, e3[mlen+2][mlen+3][mlen+4] == for rightside
-    for(int i = imcokep2;i<mlen;i++){
-        //printf("/%d==%d",m[starti+i],e3[i+2]);
-        if(m[starti+i]!=e3[(msta+i+2)%upc]){ //i文字目で不一致
-            if(i>1){ //2文字以上一致してないと意味ない
-                if(kmpc[i]!=0){ //borderがある
-                    imcokep = i-kmpc[i]; //i-border文字飛ばせる
-                    imcokep2 = kmpc[i]; //現在の一致文字数
-                }
-                else{ //開始文字はこの先にある
-                    imcokep = i; //i文字飛ばせる
-                    imcokep2 = 0; //現在の一致文字数
-                }
-            }
-            else{imcokep=0;imcokep2=0;}
-            //if(i>18){
-            //    printf("\n%d文字目で不一致がおきたので%d文字既に一致してるとして%d文字飛ばせる",i,imcokep2,imcokep);
-            //}
-            return 0;
-        }
-    }
-    if(kmpc[mlen-1]!=0){ //borderがある
-                    imcokep = mlen-1-kmpc[mlen-1]; //i-border文字飛ばせる
-                    imcokep2 = kmpc[mlen-1]; //現在の一致文字数
-                }
-                else{ //開始文字はこの先にある
-                    imcokep = mlen-1; //i文字飛ばせる
-                    imcokep2 = 0; //現在の一致文字数
-    }
-    //imcokep = kmpc[mlen-1];imcokep2= (mlen-1)-kmpc[mlen-1]; //
-    //printf("Core is found. ");
-    //printf("\n%d文字目まで一致したので%d文字既に一致してるとして%d文字飛ばせる",mlen,imcokep2,imcokep);
-    //exit(5);
-    //if(rand()%100000==0){exit(9);}
-    return 1;
 }
 
 int pscmpr(bool *ar,bool *ar2,int start,int start2,int l,int bl,int plen,int y,int a){ //分割2つの長さをlまで比べる．
@@ -610,18 +531,25 @@ int pscmpr(bool *ar,bool *ar2,int start,int start2,int l,int bl,int plen,int y,i
 int pscheck(int *m,int start,int plen, int round){ //完全一致を探す
     bool *bitlet;
     bitlet = (bool*)malloc(10000);
+    //round 0 .. 0からccs[round]
+    //round1 ccs[round](118)を足す
+    //round2 dc2s[1](57466)を引いた値(0〜dc2s[1]〜[2]にccs[2](56461)を足す)
+    //round3 dc2s[2]をひいてccs[3]を足す
     int rofs = ccs[round];
     if(round>=2){rofs-=dc2s[round-1];}
     int y = cmlen(m,start,plen,bitlet);
     int a,b,c,d;
     int posup = selectnew1(k3x,k3sub,k3sub2,m[start]+rofs,Sizelist[8],Sizelist[3],Sizelist[4]);
     int posbt = selectnew1(k3x,k3sub,k3sub2,m[start]+1+rofs,Sizelist[8],Sizelist[3],Sizelist[4]);
+    int ry = posup;
     posup = sranknew0(posup,k3x,k3sub,k3sub2,Sizelist[3],Sizelist[4])-1;
     posbt = sranknew0(posbt,k3x,k3sub,k3sub2,Sizelist[3],Sizelist[4]);
+    //if(posup>=661175){printf("[%d]のエラー:%d[%d]\n",m[start],ry,rofs);}
+    //printf("%d > %d >> (%d 〜 %d)%d - %d[%d]\n",m[start]+rofs,ry,posup,posbt,plen,start,round);
     if(posup < dc2s[round]-1){posup = dc2s[round]-1;}
     if(posbt > dc2s[round+1]){posbt = dc2s[round+1];}
     int pos = 0;
-    //printf("(%d 〜 %d)%d - %d\n",posup,posbt,plen,start);
+    //printf("%d:(%d 〜 %d)%d - %d\n",rofs,posup,posbt,plen,start);
     //for(int y6=0;y6<plen;y6++){printf("[%d]",m[start+y6]);}
     //posup = 既に絶対違うと考えられるところ(round0だと-1)
     //posbt = 既に絶対違うと考えられるところ(round0だと分割数そのもの)
@@ -652,7 +580,13 @@ int pscheck(int *m,int start,int plen, int round){ //完全一致を探す
             break;
         }
     }
-    if(pos==-1){exit(6);}
+    if(pos==-1){
+        //for(int yj=0;yj<plen;yj++){printf(" %d",m[start+yj]);}
+        //for(int yj=0;yj<=loops;yj++){printf("\ndc2s[%d]=%d,%d",yj,dc2s[yj],ccs[yj]);}
+        //for(int yj=1;yj<=loops;yj++){uhdisp(dc2s[yj]-1);}
+        exit(6);
+        }
+   //printf(" -> %d\n",pos);
     return pos;
 }
 
@@ -660,6 +594,7 @@ int ptrans(int *B1,int *B2,int *B3,int *Ls,int *Rs,int startm,int *m,int mrlen,i
     int *Rp;int flag = 0;Rp = (int*)malloc(mrlen*4+4);
     int tn = -1;int Rpptr = 0;int len = 0;
     coredata[6] = -1;coredata[8]=0; //Cコアは,最初はないし，長さも0;
+    if(DEBUGFLAG==1){printf("\n[変換%d]",round);}
     for(int i = startm+mrlen-1;i>startm;i--){ //check from right(for setting L&S type)
         Rp[Rpptr] = m[i];len++;
         if(m[i-1] < m[i]){tn=0;}
@@ -688,7 +623,7 @@ int ptrans(int *B1,int *B2,int *B3,int *Ls,int *Rs,int startm,int *m,int mrlen,i
     for(int i = 0;i<=Rpptr;i++){ //reverse Rp >> m
         m[startm+i] = Rp[Rpptr-i];
     }
-
+    if(DEBUGFLAG==1){printf("\n[変換%d]end",round);}
     if(B2[round]==0){ //確実に切れる場所[Aコア]がない
         coredata[0] = -1; //Aコアはない
         coredata[2] = 0;
@@ -922,6 +857,60 @@ int coreAcheck(int *m,int round,int count,int tround,int startm){ //左の[0][1]
     if(etg==0){printf("Aでぴったり切れている");occart2[tround][1] = -1;occart2[tround][0] = -1;return 0;}
     if(etg==2){printf("追加 > %d.%d",e[0],e[1]);occart2[tround][1] = e[0];occart2[tround][0] = e[1];return 0;}
     if(etg==1){printf("追加 > %d",e[0]);occart2[tround][1] = e[0];return 0;}
+    return 0;
+}
+
+
+int findinNS(int *m,int startm,int mrlen,int round,int *kmpc,int *B1,int *B2,int *B3,int *Ls,int *Rs){
+    if(DEBUGFLAG==1){
+        printf("\nNSから探す[%d]\nkmpc=",mrlen);
+        for(int i2 = 0;i2<mrlen;i2++){printf("%d ",kmpc[i2]);}
+        printf("\n");
+        for(int i2 = 0;i2<mrlen;i2++){printf("%d ",m[startm+i2]);}
+    }
+    int tg,kpofs;
+    tg = 0;kpofs=0;
+        for(int y8=0;y8<Sizelist[0];y8++){
+            for(int y9=0;y9<mrlen;y9++){
+                if(NS[y9+y8]+dc2s[loops-1]==m[startm+tg]){
+                    tg++;
+                    if(DEBUGFLAG==1){printf("\n%d:%d(%d - %d)[+%d]",kpofs,NS[y9+y8]+dc2s[loops-1],y9+y8,tg,D3access(NS[y9+y8]+dc2s[loops-1]));}
+                    if(tg==mrlen){
+                        if(DEBUGFLAG==1){printf("パターン発見[%d]",kpofs-ocofs);}
+                        int e2[2] = {NS[y8-1]+dc2s[loops-1],NS[y8-2]+dc2s[loops-1]};
+                        int tk = rpsck(m,Ls,B1,e2,loops-1);
+                        if(DEBUGFLAG==1){if(tk==-1){printf("\nこれはコアではない2");}}
+                        if(tk==0){
+                            printf("左OK");
+                            int e[3] = {NS[y8+mrlen]+dc2s[loops-1],NS[y8+mrlen+1]+dc2s[loops-1],NS[y8+mrlen+2]+dc2s[loops-1]};
+                            tk = psck(m,Rs,B2,e,loops-1);
+                            if(DEBUGFLAG==1){if(tk==-1){printf("\nこれはコアではない");}}
+                            if(tk==0){ //左右も完璧に合ってた
+                                if(DEBUGFLAG==1){printf("答え");}
+                                printf(" %d",kpofs-ocofs);
+                                if(ans<1000 && CHECKFLAG==1){checkans[ans]=kpofs-ocofs;}
+                                ans++;
+                            }
+                        }
+                        kpofs+=D3access(NS[y8]+dc2s[loops-1]);
+                        tg=0;break;
+                    }
+                }
+                else{ //不一致
+                    if(tg!=0){
+                        printf("\n%d[%d > %d]",y8,tg,kmpc[tg]);
+                        for(int u=0;u<tg-kmpc[tg]+1;u++){
+                            printf("(+%d)",D3access(NS[u+y8]+dc2s[loops-1]));
+                            kpofs+=D3access(NS[u+y8]+dc2s[loops-1]);
+                        }
+                        y8+=tg - kmpc[tg];
+                        tg = kmpc[tg];
+                    }
+                    else{kpofs+=D3access(NS[y9+y8]+dc2s[loops-1]);}
+                    break;
+                }
+            }
+        }
     return 0;
 }
 
@@ -1334,6 +1323,7 @@ int patternmatching1(int *m,int absm,int fround){
     int startm = 0;
     int mrlen = absm; 
     int round = 0;
+    ocofs = 0;
     int *B1,*B2,*B3;
     B1 = (int*)calloc(fround+1,4);
     B2 = (int*)calloc(fround+1,4);
@@ -1388,6 +1378,11 @@ int patternmatching1(int *m,int absm,int fround){
         else{printf("\nBコア = 位置%dから長さ%d",coredata[4],coredata[5]);}
         if(coredata[6]==-1){printf("\nCコア = なし");}
         else{printf("\nCコア = 文字%dが%d個",coredata[7],coredata[8]);}
+    }
+    if(transk==loops){
+        findinNS(m,startm,mrlen,round,kmpc,B1,B2,B3,Ls,Rs);
+        printf(" / ans :%d 個 (core : %d個)",ans,coreans);
+        return 0;
     }
     if(coredata[0]==-1){
         if(DEBUGFLAG==1){printf("Bルートで検索");}
@@ -1465,7 +1460,7 @@ int qrmload(int *m,int c,int jo){ //mの中に，english.001.2 の中からc文�
         if(chr<0){m[i]=chr + 256;}
         if(m[i]==10){jswt=1;}
         //printf("\n%x(%d)",m[i],i);
-        if(DEBUGFLAG==1){printf("%c",m[i]);}
+        //if(DEBUGFLAG==1){printf("%c",m[i]);}
     }
     printf("]");
     return c;
@@ -1510,7 +1505,7 @@ int qrmreload(int *m,int c){ //mの中に，english.001.2 の中からc文字を
     for(int i=0;i<checkpz[1];i++) { //c文字
         chr = fgetc(fp);
         m[i] = chr;
-        if(DEBUGFLAG==1){printf("%c",chr);}
+        //if(DEBUGFLAG==1){printf("%c",chr);}
         if(chr<0){m[i]=chr + 256;}
     }
     printf("]");
@@ -1562,7 +1557,7 @@ int main(){
         }
         if(flag==2){dcs[w]=a;if(w==loops){flag++;w=1;}else{w++;}}
         if(flag==1){
-            Sizelist[w]=a; //printf("\nSizelist[%d] = %d",w,a);
+            Sizelist[w]=a;printf("\nSizelist[%d] = %d",w,a);
             if(w==10){
                 flag++;w=1; //各種サイズを設定
                 NS = (unsigned int*)malloc(4*Sizelist[0]);
@@ -1611,6 +1606,7 @@ int main(){
         if(flag==14){D_3s[w]=a;if(w+1==Sizelist[1]){flag++;w=0;}else{w++;}}
     }
     fclose(fp);
+    cc2s[loops]=Sizelist[8];ccs[loops]=Sizelist[8]-dc2s[loops];
     for(int i=0;i<256;i++){
         int ju = 128;
         int je = 0;
@@ -1624,6 +1620,21 @@ int main(){
     //printf("\nNS = %d,%d,%d ...",NS[0],NS[1],NS[2]);
     ////同じ配列が得られているかのチェック
     //for(int y8 = 0;y8<30;y8++){uhdisp(y8);}
+    int popo = 5;
+    int ujk = ccs[popo]; //ccs[popo+1]-ccs[popo]+2 ccs[popo+1]-ccs[popo]+2
+    /*for(int u= 48340;u<58451;u++){
+        int posup = selectnew1(k3x,k3sub,k3sub2,u+ujk,Sizelist[8],Sizelist[3],Sizelist[4]);
+        int posbt = selectnew1(k3x,k3sub,k3sub2,u+ujk+1,Sizelist[8],Sizelist[3],Sizelist[4]);
+        if(posup>=posbt){printf("ミス");exit(4);}
+        int posup2 = sranknew0(posup,k3x,k3sub,k3sub2,Sizelist[3],Sizelist[4])-1;
+        int posbt2 = sranknew0(posbt,k3x,k3sub,k3sub2,Sizelist[3],Sizelist[4])-1;
+        //printf("\n : %d(%d)[%d-%d][%d,%d]",u,u+ujk,posup2+1,posbt2,posup,posbt);
+        if(posup2<posbt2){
+            printf("\n\n候補%d(%d)[%d-%d][%d,%d]",u,u+ujk,posup2+1,posbt2,posup,posbt);
+            for(int uj=posup2+1;uj<=posbt2;uj++){uhdisp(uj);}
+        }
+    }
+    exit(4);*/
     int *m;
     int msize = 10000;
     m = (int*)malloc(4*msize);

@@ -8,12 +8,12 @@
 #include <time.h>
 #include <filesystem>
 
-#define MMODE 3
-#define MLONG 100
-#define MREP 50
-#define MSTART 144293616
+#define MMODE 5
+#define MLONG 5000
+#define MREP 20
+#define MSTART 48539476
 #define MRANDRANGE 1
-#define MRANDBASE 100
+#define MRANDBASE 10000
 #define CHECKFLAG 0 //これが1の場合は，結果が全部本当に正しいかをファイルをひらきながら全部チェックする
 //2ならパターンの変形だけ行う
 #define DEBUGFLAG 0 //これが1なら，デバッグを表示しながら検索を行う
@@ -23,7 +23,7 @@
 //     MREP 回実行する．
 // 2 : 指定されているファイルの中のMSTARTからMLONG文字の文字列を選択肢，照合する
 
-char qname[] = "../datalist/english.001.2"; //ちゃんとここも変える
+char qname[] = "../datalist/dna"; //ちゃんとここも変える
 char wname[] = "index"; //index file name
 int checkans[1000];
 int checkpz[5];
@@ -226,6 +226,7 @@ int ptrans(unsigned int *D,int *D_2,int *B1,int *B2,int *B3,int *Ls,int *Rs,int 
     Rp = (int*)malloc(mrlen*4+4);
     int tn = -1;int Rpptr = 0;int len = 0;
     coredata[6] = -1;coredata[8]=0; //Cコアは,最初はないし，長さも0;
+    if(DEBUGFLAG==1){printf("\n[変換%d]",round);}
     for(int i = startm+mrlen-1;i>startm;i--){ //check from right(for setting L&S type)
         Rp[Rpptr] = m[i];
         //printf("\n<[%d]%d>",B2[round],m[i]);
@@ -569,6 +570,58 @@ void findinround1(unsigned int *D,int *D_2,int *D_3,int tg,int round,int pofs){
         }
     }
     return;
+}
+
+int findinNS(unsigned int *D,int *D_2,int *D_3,int startm,int mrlen,int round,int *kmpc,int *B1,int *B2,int *B3,int *Ls,int *Rs){
+    if(DEBUGFLAG==1){
+        printf("\nNSから探す[%d]\nkmpc=",mrlen);
+        for(int i2 = 0;i2<mrlen;i2++){printf("%d ",kmpc[i2]);}
+        printf("\n");
+        for(int i2 = 0;i2<mrlen;i2++){printf("%d ",m[startm+i2]);}
+    }
+    int tg,kpofs;
+    tg = 0;kpofs=0;
+        for(int y8=0;y8<NSsize;y8++){
+            for(int y9=0;y9<mrlen;y9++){
+                if(NS[y9+y8]+dc2s[fround-1]==m[startm+tg]){
+                    tg++;
+                    if(DEBUGFLAG==1){printf("\n%d:%d(%d - %d)[+%d]",kpofs,NS[y9+y8]+dc2s[fround-1],y9+y8,tg,D_3[NS[y9+y8]+dc2s[fround-1]]);}
+                    if(tg==mrlen){
+                        if(DEBUGFLAG==1){printf("パターン発見[%d]",kpofs-ocofs);}
+                        int e2[2] = {NS[y8-1]+dc2s[fround-1],NS[y8-2]+dc2s[fround-1]};
+                        int tk = rpsck(D,D_2,Ls,B1,e2,fround-1);
+                        if(DEBUGFLAG==1){if(tk==-1){printf("\nこれはコアではない2");}}
+                        if(tk==0){
+                            int e[3] = {NS[y8+mrlen]+dc2s[fround-1],NS[y8+mrlen+1]+dc2s[fround-1],NS[y8+mrlen+2]+dc2s[fround-1]};
+                            tk = psck(D,D_2,Rs,B2,e,fround-1);
+                            if(DEBUGFLAG==1){if(tk==-1){printf("\nこれはコアではない");}}
+                            if(tk==0){ //左右も完璧に合ってた
+                                if(DEBUGFLAG==1){printf("答え");}
+                                printf(" %d",kpofs-ocofs);
+                                if(ans<1000 && CHECKFLAG==1){checkans[ans]=kpofs-ocofs;}
+                                ans++;
+                            }
+                        }
+                        kpofs+=D_3[NS[y8]+dc2s[fround-1]];
+                        tg=0;break;
+                    }
+                }
+                else{ //不一致
+                    if(tg!=0){
+                        if(DEBUGFLAG==1){printf("\n%d[%d > %d]",y8,tg,kmpc[tg]);}
+                        for(int u=0;u<tg-kmpc[tg]+1;u++){
+                            if(DEBUGFLAG==1){printf("(+%d)",D_3[NS[u+y8]+dc2s[fround-1]]);}
+                            kpofs+=D_3[NS[u+y8]+dc2s[fround-1]];
+                        }
+                        y8+=tg - kmpc[tg];
+                        tg = kmpc[tg];
+                    }
+                    else{kpofs+=D_3[NS[y9+y8]+dc2s[fround-1]];}
+                    break;
+                }
+            }
+        }
+    return 0;
 }
 
 int findupsintop(unsigned int *D,int *D_2,int *D_3,int startm,int mrlen,int *B1,int *B2,int *B3,int *Ls,int *Rs,int count){ //一番上の階層まで来てもまだ見つからない例があるなら全力で対処する
@@ -1049,6 +1102,9 @@ int patternmatching2(unsigned int *D,int *D_2,int *D_3,int absm){
         else{printf("\nCコア = 文字%dが%d個",coredata[7],coredata[8]);}
     }
     if(CHECKFLAG==2){return 0;}
+    if(transk==fround){
+        findinNS(D,D_2,D_3,startm,mrlen,round,kmpc,B1,B2,B3,Ls,Rs);
+    }
     if(coredata[0]==-1){
         if(DEBUGFLAG==1){printf("Bルートで検索");}
         findB(D,D_2,D_3,startm,mrlen,round,kmpc,B1,B2,B3,Ls,Rs);
@@ -1171,7 +1227,9 @@ int copmes(int setA,int setB){
         else{ylist1[i] = double(ancl[i][setB]);}
         if(ymin>ylist1[i]){ymin=ylist1[i];}
         if(ymax<ylist1[i]){ymax=ylist1[i];}
-        fprintf(fp,"%d %d %d %d %d %.3f\n",ancl[i][0],ancl[i][1],ancl[i][2],ancl[i][3],ancl[i][4],ancd[i]); //0:loops
+        int hok = ((ancl[i][0]+4)/5)*5-4;
+        int hok2 = ((ancl[i][0]+4)/5)*5;
+        fprintf(fp,"%d~%d %d %d %d %d %.3f\n",hok,hok2,ancl[i][1],ancl[i][2],ancl[i][3],ancl[i][4],ancd[i]); //0:loops
     }
     fclose(fp); // open file or return null
     printf("[%d-%d][%f-%f]",xmin,xmax,ymin,ymax);
@@ -1232,6 +1290,11 @@ int main()
 
     }
     fclose(fp);
+    if(MMODE==5){ //情報を開示して終わり
+        printf("\n & %d & %d & %d",dc2s[loops],tm1+dcs[loops],tm1);
+        exit(4);
+
+    }
     pn = tm1;
     NSsize = pn;
     round=loops;
