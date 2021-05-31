@@ -8,12 +8,12 @@
 #include <time.h>
 #include <filesystem>
 
-#define MMODE 5
+#define MMODE 3
 #define MLONG 5000
 #define MREP 20
 #define MSTART 48539476
-#define MRANDRANGE 1
-#define MRANDBASE 10000
+#define MRANDRANGE 900
+#define MRANDBASE 100
 #define CHECKFLAG 0 //これが1の場合は，結果が全部本当に正しいかをファイルをひらきながら全部チェックする
 //2ならパターンの変形だけ行う
 #define DEBUGFLAG 0 //これが1なら，デバッグを表示しながら検索を行う
@@ -1161,7 +1161,7 @@ int qrmreload(int c){ //mの中に，english.001.2 の中からc文字をもう�
 int qrmloadset(int jo){ //c番目を読む
     FILE *fp;
     long long int qsize = std::filesystem::file_size("../esp-index-I-master/src/makingquery.txt"); //qsizeには，ファイルのサイズが書かれているはず
-    fp = fopen("../esp-index-I-master/src/makingquery.txt", "r"); // open file or return null
+    fp = fopen("query.txt", "r"); // open file or return null
     if(fp == NULL) {
         printf("%s such file doesn't exist!\n", qname);
         return -1;
