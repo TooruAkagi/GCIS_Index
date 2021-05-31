@@ -21,7 +21,7 @@
 //     MREP 回実行する．
 // 2 : 指定されているファイルの中のMSTARTからMLONG文字の文字列を選択肢，照合する
 
-char qname[] = "../datalist/english.001.2";
+char qname[] = "inputsample";
 int ancl[MREP][5];
 double ancd[MREP];
 int checkpz[5];
@@ -1515,9 +1515,6 @@ int qrmreload(int *m,int c){ //mの中に，english.001.2 の中からc文字を
 int main(){
     FILE *fp;
     char wname[] = "codeindex"; //index file name
-    //unsigned int *D;
-    //int *D_2;
-    //int i = 0;int pn = 0;int round = 0;
     dcs[0] = 0;dc2s[0] = 0;ccs[0] = 0;cc2s[0] = 0; 
     unsigned char chr;
     unsigned int a;
@@ -1616,25 +1613,9 @@ int main(){
             ju = ju/2;
         }
     } //rankctの定義
-    //exit(1);
-    //printf("\nNS = %d,%d,%d ...",NS[0],NS[1],NS[2]);
-    ////同じ配列が得られているかのチェック
-    //for(int y8 = 0;y8<30;y8++){uhdisp(y8);}
     int popo = 5;
     int ujk = ccs[popo]; //ccs[popo+1]-ccs[popo]+2 ccs[popo+1]-ccs[popo]+2
-    /*for(int u= 48340;u<58451;u++){
-        int posup = selectnew1(k3x,k3sub,k3sub2,u+ujk,Sizelist[8],Sizelist[3],Sizelist[4]);
-        int posbt = selectnew1(k3x,k3sub,k3sub2,u+ujk+1,Sizelist[8],Sizelist[3],Sizelist[4]);
-        if(posup>=posbt){printf("ミス");exit(4);}
-        int posup2 = sranknew0(posup,k3x,k3sub,k3sub2,Sizelist[3],Sizelist[4])-1;
-        int posbt2 = sranknew0(posbt,k3x,k3sub,k3sub2,Sizelist[3],Sizelist[4])-1;
-        //printf("\n : %d(%d)[%d-%d][%d,%d]",u,u+ujk,posup2+1,posbt2,posup,posbt);
-        if(posup2<posbt2){
-            printf("\n\n候補%d(%d)[%d-%d][%d,%d]",u,u+ujk,posup2+1,posbt2,posup,posbt);
-            for(int uj=posup2+1;uj<=posbt2;uj++){uhdisp(uj);}
-        }
-    }
-    exit(4);*/
+    
     int *m;
     int msize = 10000;
     m = (int*)malloc(4*msize);

@@ -14,24 +14,22 @@
 #define MSTART 48539476
 #define MRANDRANGE 900
 #define MRANDBASE 100
-#define CHECKFLAG 0 //これが1の場合は，結果が全部本当に正しいかをファイルをひらきながら全部チェックする
-//2ならパターンの変形だけ行う
-#define DEBUGFLAG 0 //これが1なら，デバッグを表示しながら検索を行う
+#define CHECKFLAG 0 //if 1, check answers
+#define DEBUGFLAG 0 //if 1, show the process
 //MMODE = 
-// 0 : query.txtの中の文字列を照合
+// 0 : open query.txt
 // 1 : qnameで指定されているファイルの中からランダムに MLONG 文字の文字列を選択し，
 //     MREP 回実行する．
 // 2 : 指定されているファイルの中のMSTARTからMLONG文字の文字列を選択肢，照合する
 
-char qname[] = "../datalist/dna"; //ちゃんとここも変える
+char qname[] = "inputsample"; //ちゃんとここも変える
 char wname[] = "index"; //index file name
 int checkans[1000];
 int checkpz[5];
 int occart[10]; //-1,-1,X,ofc,-1,-1,-1
-//Xの-ofsに出現し，左はroundLまで，右はroundRまで測定済
 int ancl[MREP][5];
 int occart2[30][10]; //高さ30に対して(左0,左1,分割番号,ofs,右1,右2,右3,測定内容)
-//測定内容 0 = なし, 1 = B,2 = AB,3 = BC,4 = ABC
+// 0 = *, 1 = B,2 = AB,3 = BC,4 = ABC
 int coredata[10]; //Aの判定,Aの開始位置,Aの長さ,Bの判定[1],Bの開始位置,Bの長さ,Cの判定,Cの開始位置,Cの長さ,
 double ancd[MREP];
 int dcs[18]; //[i] = starting position of floor-i's first purse in the Dictionary

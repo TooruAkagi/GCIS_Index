@@ -11,7 +11,7 @@
 #define MLONG 2500
 #define MREP 10
 
-char qname[] = "../datalist/fib41"; //input
+char qname[] = "inputsample"; //input
 char wname[] = "query_automake.txt"; //output
 char ptlist[MREP][MLONG];
 

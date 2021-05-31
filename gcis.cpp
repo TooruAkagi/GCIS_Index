@@ -7,14 +7,11 @@
 #include <time.h>
 #include <filesystem>
 
-#define DEBUGFLAG 0 //1なら工程を全て表示
-#define OVERTRANSFORM 0 //指定された回数は，文法のサイズが巨大化しても必ず変換する
-#define TRANSTIMES 99 //この回数だけ変換したら勝手に終わる
+#define DEBUGFLAG 0 // 1 -> display the process with printf
+#define OVERTRANSFORM 0 //the least times of repetation
+#define TRANSTIMES 99 //the maximum limit of repeation
 
-char fname[] = "../datalist/commoncrawl.ascii.txt"; //input file name
-//char fname[] = "idx4axkr_sh2.cpp";
 int (*nextsort)[3];
-// int nextsort[65535][3];
 int sortstack = 0; 
 int tempC = 260;
 int codeA = 0; // = length of all Dictionaries
@@ -123,24 +120,6 @@ void csort(unsigned int *T,int *P,int *P_2,int *I,int a,int b,int c){
     free(cptr);
 }
 
-void display(unsigned int *D,int *D_2,int i,int f){ 
-    //display i-th fastest purse
-    //note : this method can be omitted
-        if(f>0){display(D,D_2,dc2s[f]+i,0);return;}
-        int l = D_2[i+1]-D_2[i];
-        printf("[%d]",i);
-        for(int k = 0; k<l; k++){
-            if(i<dc2s[1]){
-                std::cout << std::hex << int(D[D_2[i]+k]);
-            }
-            if(i>=dc2s[1] && i<dc2s[2]){
-                display(D,D_2,D[D_2[i]+k],0);
-            }
-            printf(" ");
-        }
-        printf("|");
-}
-
 int purse(unsigned int *T,int *P,int *P_2,long int fsize){ //purse T and set P.
     std::cout << std::endl;
     int tn = -1; //temporary number
@@ -237,42 +216,6 @@ int grammarmake(unsigned int *T,int *P,int *P_2,int *I,unsigned int *NS,int *K,i
     return t;
 }
 
-
-int queryload(int *m){
-    char qname[] = "query.txt";
-    char chr;
-    FILE *fp;
-    long long int qsize;
-    qsize = std::filesystem::file_size(qname);
-    fp = fopen(qname, "r"); // open file or return null
-    if(fp == NULL) {
-        printf("%s such file doesn't exist!\n", qname);
-        return -1;
-    }
-    int i = 0;
-    for(i=0;i<qsize;i++) {
-        chr = fgetc(fp);
-        m[i] = chr;
-        if(chr<0){m[i]=chr + 256;}
-        //printf("\n%d(%d)",m[i],i);
-    }
-    return (int)qsize;
-}
-
-int writeset(unsigned int *T,int NSsize){ //ランダムにする
-    FILE *fp;
-    char wname[] = "testd";
-    fp = fopen(wname, "w"); // open file or return null
-    for(int yj = 0 ;yj<NSsize ; yj++){
-        unsigned char  chr = T[yj];
-        chr = rand()%256;
-        T[yj] = chr;
-        fwrite(&chr, sizeof(char),1, fp); //7:NS
-    }
-    fclose(fp); // open file or return null
-    return 0;
-}
-
 int write6(unsigned int *D,int *D_2,int *D_3,unsigned int *NS,int NSsize){
     FILE *fp;
     //unsigned char chr;
@@ -297,17 +240,12 @@ int main()
     long long int sps = 0;
     long long int spsod = 0;
     FILE *fp;
-    //loops = 2;
-    
     unsigned int *T,*D,*NS;
     int *P,*P_2,*I,*K,*D_2,*D_3;
     int i = 0;
-    //int *m;
-    //int msize = 100000;
     int pn = 0;
     int round = 0;
     
-    //m = (int*)malloc(4*msize);
     long long int fsize = 0;
     char fname2[100];
     printf("\nファイル名を入力:");
@@ -321,17 +259,13 @@ int main()
         return 1;
     }
     printf("\nfile %s 's size = %lld byte Last = ",fname2,fsize);
-    //fsize = 100000000;
     T= (unsigned int*)malloc(fsize*4);
     for(i=0;i<fsize;i++) {
         chr = fgetc(fp);
         T[i] = chr;
         if(chr<0){T[i]=chr + 256;}
-        //if(i>553900){printf("%d ",T[i]);exit(0);}
     }
     fclose(fp);
-    //writeset(T,fsize);
-    //msize = queryload(m);
     dcs[0] = 0;dc2s[0] = 0;
     
     for(int rs = 0;rs<loops;rs++){
@@ -372,10 +306,6 @@ int main()
     if(DEBUGFLAG==1){for(int yj = 0 ;yj<pn;yj++){printf("<%d>",NS[yj]);}printf("\n");}
     write6(D,D_2,D_3,NS,pn);
     clock_t timee = clock();
-    
-    //for(int yj = 0 ;yj<35;yj++){printf("<%d>",D_3[yj]);}
-    //patternmatching1(NS,D,D_2,D_3,pn,m,msize,round); 
-    //exit(1);
     
     const double time = static_cast<double>(timee - timesb) / CLOCKS_PER_SEC ;
     printf("\n[make index :  time %lf[s]\n",time);

@@ -18,18 +18,17 @@ int exceptr[18];
 int loops =6; //the number of applying GCIS to the input file
 int ans = 0;
 int hh = 0;
-int lpurse = 65536; //定数
-int spurse = 64; //定数
-int spursesuu = lpurse / spurse; //定数
+int lpurse = 65536; //Const
+int spurse = 64; //Const
+int spursesuu = lpurse / spurse; //Const
 unsigned int *NS;
 unsigned short int *d2topsub2,*k3sub2,*D_3m;
 int *d2topsub,*k3sub,*D_3;
-//int NSsize,D3smax,D3mmax,k3submax,k3sub2max,d2topsubmax,d2topsub2max,d2topmax,d2undermax; //配列サイズの保管
 int Sizelist[11] = {0,0,0,0,0,0,0,1980000000,80000000,0,0};
 unsigned char *D_3s;
 bool *k,*k3,*d2under,*d2top;
 
-int loga(unsigned int u){ //指定の数字uがn桁の二進数で表せる時，nを返す．
+int loga(unsigned int u){ //log u
     if(u<1){/*printf("(%d)",u);*/return 0;}
     unsigned int e = 2;
     for(int i=1;i<32;i++){
@@ -39,7 +38,7 @@ int loga(unsigned int u){ //指定の数字uがn桁の二進数で表せる時�
     return 0;
 }
 
-int bread(bool *u,int s,int l){ //bool列のsからl文字を読む．
+int bread(bool *u,int s,int l){
     if(s<0){return 0;}
     int e=0;
     for(int i=s;i<s+l;i++){
@@ -50,8 +49,7 @@ int bread(bool *u,int s,int l){ //bool列のsからl文字を読む．
     return e;
 }
 
-int bwrite(bool *u,int s,int l,int a){ //bool列のsからl文字分に，数字aを追加．
-    //数字が小さすぎるときは0で埋める．
+int bwrite(bool *u,int s,int l,int a){ 
     int c = s+l-loga(a);
     int e=a;
     for(int i=s+l-1;i>=s;i--){
@@ -62,7 +60,7 @@ int bwrite(bool *u,int s,int l,int a){ //bool列のsからl文字分に，数字
     return 0;
 }
 
-void logb(unsigned int u,int n,bool *ar){ //指定の数字uの下n桁を二進数で表して保存．
+void logb(unsigned int u,int n,bool *ar){
     unsigned int e = u;
     bool c[n];
     for(int i=n-1;i>=0;i--){
@@ -73,8 +71,8 @@ void logb(unsigned int u,int n,bool *ar){ //指定の数字uの下n桁を二進�
     return;
 }
 
-void logg(unsigned int u, bool *ar){ //指定の数字uのガンマ符号を二進数で表す，配列kにその値を保存．
-    if(u<1){printf("0以下の数(%d)はlogg表現不可\n",u);return;}
+void logg(unsigned int u, bool *ar){ 
+    if(u<1){printf("under 0(%d) cannot be express in elias ganma\n",u);return;}
     int l = loga(u);
     for(int i=1;i<l;i++){ar[kad]=0;kad++;}
     logb(u,l,ar);
@@ -85,7 +83,7 @@ void blogg(int p,unsigned int *D,int *D_2,bool *ar){
     for(int i = D_2[p]+1;i<D_2[p+1];i++){logg(D[i]+1,ar);}
 }
 
-void diff(unsigned int *T,int s,int n){ //配列Tのsからn個(先頭以外)を差分保存に変換する．sは0でない．
+void diff(unsigned int *T,int s,int n){
     for(int i=n-2;i>=0;i--){
         if(T[s+i+1]>=T[s+i]){T[s+i+1] = T[s+i+1] - T[s+i];}
         else{T[s+i+1] = T[s+i] - T[s+i+1];}
@@ -93,29 +91,28 @@ void diff(unsigned int *T,int s,int n){ //配列Tのsからn個(先頭以外)を
     return;
 }
 
-int ppow(int n){ //2のn乗を返す
+int ppow(int n){ //power
     if(n<1){return 1;}
     return 2*ppow(n-1); 
 }
 
-int cd1(int x,bool *ar){ //xの一進数符号化
+int cd1(int x,bool *ar){ //unary x
     if(x==0){ar[kad2]=0;kad2++;return 0;}
     ar[kad2]=1;kad2++;
     return cd1(x-1,ar);
 }
 
-int fano(int *T,int s,int n,int p,bool *ar,bool *ar2){ //配列Tのsからn個をElias fanoコーディングする．
+int fano(int *T,int s,int n,int p,bool *ar,bool *ar2){
     kad = 0;
     kad2 = 0;
     int topofs = 0;
     int t = ppow(p);
-    printf("\np=%d / t=%d",p,t);
+    //printf("\np=%d / t=%d",p,t);
     for(int i=s;i<n;i++){
         cd1(T[i]/t-topofs,ar2);
         topofs = T[i]/t;
         logb(T[i]%t,p,ar);
     }
-    printf("fanoコーディング 下位ビット = %d[%d bytes] / 上位ビット = %d[%d bytes]",kad,kad/8,kad2,kad2/8);
     Sizelist[9] = kad2;
     Sizelist[10] = kad;
     return kad/8 + kad2/8;
@@ -126,10 +123,10 @@ void fano0(unsigned int *D,int *D_2,bool *ar){
     ccs[kad]=0;cc2s[kad]=0;kad++;
     int r = 0;
     for(int i=0;i<dc2s[loops];i++){
-        int h = D[D_2[i]]; //hにはその文字の番号．
-        if(i>0){h = D[D_2[i]]-D[D_2[i-1]];} //0なら
+        int h = D[D_2[i]]; ．
+        if(i>0){h = D[D_2[i]]-D[D_2[i-1]];}
         if(h<0){h=D[D_2[i]];cc2s[kad]=i+r;ccs[kad]=r;kad++;}
-        cd1(h,ar); //k3にはrankクエリを要求するコーディング．kad2が増加する．
+        cd1(h,ar); 
         r+=h;
     }
 }
@@ -141,7 +138,7 @@ int dmlen(int p,unsigned int *D,int *D_2){
             if(D[i]<D[i-1] && u==0){u=D_2[p+1]-i;break;}
         }
     }
-    if(u==D_2[p+1]-D_2[p]-1){ //分割の先頭にある，例外処理
+    if(u==D_2[p+1]-D_2[p]-1){ //set for some exception
         for(int o = loops-1;o>0;o--){
             if(p>=dc2s[o]){
                 exceptr[o] = p;
@@ -154,8 +151,8 @@ int dmlen(int p,unsigned int *D,int *D_2){
     return u;
 }
 
-int cmlen(int *m,int p,int l,bool *ar){ //配列arの先頭より分割mを保存する．
-    kad = 0; //必ず位置0から保存する．
+int cmlen(int *m,int p,int l,bool *ar){ 
+    kad = 0;
     int u = 0;
     for(int i=0;i<l;i++){
         if(i!=0){
@@ -172,96 +169,40 @@ int cmlen(int *m,int p,int l,bool *ar){ //配列arの先頭より分割mを保�
 }
 
 int gread(int p,bool *ar){
-    //配列kの位置pからガンマ符号化でどのようなもじが存在するのかを読み解く
     int i = 0;
     while(1){
         if(ar[p+i]==1){break;}
-        i++;
-    }
+        i++;}
     int u = i;
     int a = 0;
     while(u>=0){
-        a*=2;
-        a+=ar[p+i];
-        i++;u--;
-    }
+        a*=2;a+=ar[p+i];i++;u--;}
     return a;
 }
 
 int rank1(bool *u,int ar,int s){ //bool配列u上の，sから始まってar文字までの1の個数を返す()．
-    if(s<0){printf("[異常値]rank1()で，sに負の値が渡されています！");exit(0);}
+    if(s<0){printf("[Error]rank1() with position s\n");exit(0);}
     if(ar<=0){return 0;}
     int e = 0;
     for(int i=s;i<s+ar;i++){
-        if(u[i]==1){
-            e++;
-        }
+        if(u[i]==1){e++;}
     }
     return e;
 }
 
-int srank1(int c,bool *u,int *u2,unsigned short int *u3,int t2,int t3){ //0から始まってk番目までの1の個数を返す．．
+int srank1(int c,bool *u,int *u2,unsigned short int *u3,int t2,int t3){
     if(c<=0){return 0;}
     int r = c/lpurse;
     int nk = (c - r*lpurse)/spurse;
     int s =0;int e = 0;
     if(r>0){
         s = lpurse*r;
-        e = u2[r-1];
-    }
+        e = u2[r-1];}
     if(nk>0){
-        e+=u3[r*spursesuu+nk]; //t2*[k/t2]まで数えた．
-        s+=nk*spurse;
-    }
+        e+=u3[r*spursesuu+nk];
+        s+=nk*spurse;}
     for(int i=s;i<c;i++){if(u[i]==1){e++;}}
     return e;
-}
-
-int srank0(int c,bool *u,int *u2,unsigned short int *u3,int t2,int t3){ 
-    //0から始まってk番目までの1の個数を返す
-    return c-srank1(c,u,u2,u3,t2,t3);
-}
-
-int select1(bool *u,int *u2,unsigned short int *u3,int c,int n,int t2,int t3){ //k番目の1を探す．
-    int i = 0;
-    int j = 0;
-    int l = 0;
-    printf("\n(select1)c = %d",c);
-    int hmax = t2-1;int hmin = 0;
-        if(u2[0]<c){
-            while(hmax>hmin+1){
-                i = (hmax+hmin)/2;
-                if(u2[i]>=c){hmax = i-1;}
-                else{hmin = i;}
-            }
-            if(u2[hmax]>=c){i = hmin;hmax = hmin-1;}
-            else{i=hmax;hmin = hmax;}
-            l = u2[i];
-            i++;
-        }
-    int e = l;l=0;
-    int ofi = i*spursesuu;
-    printf("\n[2]get %d(%d,%d)",u2[0],c,spursesuu);
-    j=0; //2回目のloglog探索
-    hmin = 0;hmax = spursesuu-1;
-    if(t2-1 == i){hmax = t3-1;}
-    while(hmax>hmin+1){
-        j = (hmax+hmin)/2;
-        if(u3[ofi+j]>=c-e){hmax = j-1;}
-        else{hmin = j;}
-    }
-    if(u3[ofi+hmax]>=c-e){j = hmin;}else{j = hmax;}
-    if(j==spursesuu){j=spursesuu-1;}
-    l = u3[ofi+j];
-    e += l;
-    printf("\n[3]get %d(%d,%d %d %d %d)",e,l,j,u3[0],u3[1],u3[2]);
-    for(int p=i*lpurse+j*spurse;p<n;p++){
-        if(u[p]==1){
-            e++;
-            if(e==c){return p;}
-        }
-    }
-    return n+1;
 }
 
 int select0(bool *u,int *u2,unsigned short int *u3,int c,int n,int t2,int t3){ //k番目の0を探す．
@@ -282,7 +223,7 @@ int select0(bool *u,int *u2,unsigned short int *u3,int c,int n,int t2,int t3){ /
         }
     int e = l;l=0;
     int ofi = i*spursesuu;
-    j=0; //2回目のloglog探索
+    j=0; //2
     hmin = 0;hmax = spursesuu-1;
     if(t2-1 == i){hmax = t3-1;}
     while(hmax>hmin+1){
@@ -312,18 +253,14 @@ int getd2(int tgm){
 
 int gethead(int tgm){
     int tgm2 = select0(k3,k3sub,k3sub2,tgm+1,Sizelist[8],Sizelist[3],Sizelist[4]); //tgm2 = その位置までの1の数を見る．
-    //printf("\n<%d>",tgm2);
     int tgm3 = srank1(tgm2,k3,k3sub,k3sub2,Sizelist[3],Sizelist[4]); //その位置までの1の数 = 開始文字.
-    //printf("\n<%d>",tgm3);
     for(int o = loops-1;o>0;o--){
             if(tgm2>=cc2s[o]){tgm3-=ccs[o];break;}
     }
-    //printf("\n<%d>",tgm3);
     return tgm3;
 }
 
 int psread(int p,bool *ar,int D2start,int D2end,int basekey){
-    //tx[p]からtx[p+1]までの差分を読んで分割を再生．
     printf("[%d]%d ",D2start,basekey);
     int a;
     int turnsl = 0;
@@ -391,76 +328,10 @@ int rsbuild(bool *ar,int *arsub,unsigned short int *arsub2,int t2,int newn){
         }
     }
     //arsub[t2] = 999999999;
-    printf("\narsub[0] = %d",arsub[0]);
-    printf("newn = %d : rankselectサイズ :%d,%d\n",newn,t2*4,kad*2);
-    printf("入力最大位置[%d,%d]",tmpmax,tmpmax2);
+    //printf("\narsub[0] = %d",arsub[0]);
+    //printf("newn = %d : rankselectサイズ :%d,%d\n",newn,t2*4,kad*2);
+    //printf("入力最大位置[%d,%d]",tmpmax,tmpmax2);
     return t2*4 + kad*2;
-}
-
-int pscheck(int *m,int start,int plen, int round){ //完全一致を探す
-    bool *bitlet;
-    bitlet = (bool*)malloc(10000);
-    int rofs = ccs[round];
-    if(round>=2){rofs-=dc2s[round-1];}
-    int y = cmlen(m,start,plen,bitlet);
-    int a,b,c,d;
-    printf("\n<check>:");for(int yj = 0;yj<plen;yj++){printf("[%d]",m[start+yj]);}
-    int posup = select1(k3,k3sub,k3sub2,m[start]+rofs,Sizelist[8],Sizelist[3],Sizelist[4]);
-    int posbt = select1(k3,k3sub,k3sub2,m[start]+1+rofs,Sizelist[8],Sizelist[3],Sizelist[4]);
-    printf("\nposbt / posup = %d / %d (%d,%d)",posbt,posup,cc2s[round],cc2s[round+1]);
-    posup = srank0(posup,k3,k3sub,k3sub2,Sizelist[3],Sizelist[4])-1;
-    posbt = srank0(posbt,k3,k3sub,k3sub2,Sizelist[3],Sizelist[4]);
-        printf("\nstart:%d/%d\n",posup,posbt);
-        uhdisp(posup);
-        uhdisp(posbt);
-    return 0;
-}
-
-int ptrans(int *B1,int *B2,int *B3,int *Ls,int *Rs,int startm,int *m,int mrlen,int round){
-    int *Rp;
-    int flag = 0;
-    Rp = (int*)malloc(mrlen*4+4);
-    int tn = -1;int Rpptr = 0;int len = 0;
-    for(int i = startm+mrlen-1;i>startm;i--){ //check from right(for setting L&S type)
-        Rp[Rpptr] = m[i];
-        len++;
-        if(m[i-1] < m[i]){
-            tn=0;
-        }
-        if(m[i-1] > m[i]){
-            if(tn==0){ //m[i-1] & m[i] == L & S
-                if(B2[round] == 0){B2[round] = len;len = 0;flag++;}
-                else{
-                    Rpptr-=(len-1);
-                    Rp[Rpptr] = pscheck(m,i,len,round); 
-                    if(Rp[Rpptr]<0){return -99;}
-                    B3[round]++;
-                    len = 0;
-                }
-            }
-            tn=1;
-        }
-        Rpptr++;
-    }
-    len++;
-    Rp[Rpptr] = m[startm];
-    for(int i = 0;i<=Rpptr;i++){ //reverse Rp >> m
-        m[startm+i] = Rp[Rpptr-i];
-    }
-
-    if(B2[round]==0){printf("(in round%d) input string can't be pursed anymore．",round);return -2;}
-    if(B3[round]==0){printf("(in round%d) input string desn't have core",round);return -1;}
-    
-    Ls[round] = startm;B1[round]=len; //B1:leftside of core / Ls:starting posision of it
-    Rs[round] = startm + B1[round] + B3[round]; //Rs corresponds to Ls, B3 to B1.
-    free(Rp);
-    return B3[round];
-}
-
-int D3access(int c){ //c番目のD_3の値を返す
-    if(c<Sizelist[1]){return D_3s[c];}
-    if(c<Sizelist[2]){return D_3m[c-Sizelist[1]];}
-    return D_3[c-Sizelist[2]];
 }
 
 int queryload(int *m){
@@ -580,7 +451,6 @@ int main(){
     tx = (int*)malloc((maxl+1)*4); //D_2の置き換え配列
     k = (bool*)malloc(Sizelist[7]); //最初に十分な領域を割り当てる.
     k3 = (bool*)malloc(Sizelist[8]);
-    printf("ここを通過[%d,%d,%d]",maxl,Sizelist[7],Sizelist[8]);
     for(i=0;i<maxl;i++){
         //if(i==(maxl-5)){printf("[%d]まではOK(%d)",i,kad);} //Sizelist[7]を大きくするとセグフォしなくなります
         tx[i] = kad;
@@ -590,11 +460,11 @@ int main(){
         blogg(i,D,D_2,k);
     } //ガンマ符号
     tx[maxl] = kad;
-    printf("\n[D]配列サイズ : %d[%d bytes] / [D_2] = %d[%d bytes]\n",kad,kad/8,maxl,maxl*4);
+    //printf("\n[D]配列サイズ : %d[%d bytes] / [D_2] = %d[%d bytes]\n",kad,kad/8,maxl,maxl*4);
     Sizelist[7] = kad;
     totalsps += kad/8; //符号化したD
     fano0(D,D_2,k3); //fの先頭の文字のコーディングをする．kadが消えるので，再生すること．
-    printf("[D先頭]配列サイズ:%d[%d bytes]\n",kad2,kad2/8);
+    //printf("[D1]:%d[%d bytes]\n",kad2,kad2/8);
     Sizelist[8] = kad2;
     totalsps += kad2/8; //符号化したD[先頭]
     free(D);
@@ -606,25 +476,22 @@ int main(){
     Sizelist[3] = newn/lpurse + 1;Sizelist[4] =newn/spurse + 2;
     k3sub = (int*)malloc(Sizelist[3]*4);
     k3sub2 = (unsigned short int*)malloc(Sizelist[4]*2);
-    printf("\n予測rs記述量[%d / %d](サイズnewn = %d)\n", Sizelist[3],Sizelist[4],newn);
+    
     totalsps += rsbuild(k3,k3sub,k3sub2,Sizelist[3]-1,newn);
-    printf("tx[loops] = %d[NS] + %d[D] + %d[D_2] + [%d + %d(for rank.select query)] = ",Sizelist[0]*4,D_2[maxl]/8 + newn/8,dc2s[loops]*4,Sizelist[3]*4,Sizelist[4]*2);
-    printf("\nD_2[maxl]/maxl = %d(大体64 = 6 桁として実行)",D_2[maxl]/maxl);
     totalsps += Sizelist[0]*4 + dc2s[loops]*4; //NF && D
     d2under = (bool*)malloc((maxl+1)*6);
     d2top = (bool*)malloc(maxl+1+D_2[maxl]/64);
     printf("\n[[%d]]",maxl+1+D_2[maxl]/64);
     totalsps += fano(D_2,0,maxl+1,6,d2under,d2top);
-    //d2top用にrank.select配列を作ります
     newn = kad2;
     //t2=newn/lpurse;t3=newn/spurse;
     Sizelist[5] = newn/lpurse + 1;Sizelist[6] =newn/spurse + 1;
     d2topsub = (int*)malloc(Sizelist[5]*4);
     d2topsub2 = (unsigned short int*)malloc(Sizelist[6]*2);
     totalsps += rsbuild(d2top,d2topsub,d2topsub2,Sizelist[5]-1,newn);
-    printf("\n総合サイズ = %d byte(%d,%d)",totalsps,Sizelist[7],Sizelist[8]);
-    write74(); //インデックスをcodeindexと言うファイルに保管する
-    //for(int yj= 0 ;yj < 40;yj++){printf(" %d",d2topsub[yj]);}
-    printf("符号化データをファイルに書き出し完了");
+    printf("\nsps : %d byte(%d,%d)",totalsps,Sizelist[7],Sizelist[8]);
+    write74();
+
+    printf("codeindex is generated\n");
     return 0;
 }
