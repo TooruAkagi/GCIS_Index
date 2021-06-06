@@ -6,6 +6,9 @@
 #include <math.h>
 #include <filesystem>
 
+char *fname,*wname;
+char defaultfname[] = "index";
+char defaultwname[] = "codeindex";
 int vain=0;
 int cheatlen[11] = {512,256,128,64,32,16,8,4,2,1,0};
 int kad = 0;
@@ -123,7 +126,7 @@ void fano0(unsigned int *D,int *D_2,bool *ar){
     ccs[kad]=0;cc2s[kad]=0;kad++;
     int r = 0;
     for(int i=0;i<dc2s[loops];i++){
-        int h = D[D_2[i]]; ．
+        int h = D[D_2[i]];
         if(i>0){h = D[D_2[i]]-D[D_2[i-1]];}
         if(h<0){h=D[D_2[i]];cc2s[kad]=i+r;ccs[kad]=r;kad++;}
         cd1(h,ar); 
@@ -373,7 +376,6 @@ void bfwrite(bool *ar,int mx,FILE *fp){ //ビット列arをmx個書き込む
 int write74(){
     FILE *fp;
     //unsigned char chr;
-    char wname[] = "codeindex";
     fp = fopen(wname, "w"); // open file or return null
     fwrite(&loops, sizeof(int),1, fp); //0:loops
     fwrite(Sizelist, sizeof(int),11, fp); //0:定数
@@ -402,15 +404,59 @@ int write74(){
     return 0;
 }
 
-int main(){
+int shelp(){
+    printf("--Simple Usage------------------\n");
+    printf("\nRead 'index' and make 'codeindex'. \n");
+    printf("This file needs for locating in idx_uni. \n");
+    printf("Make sure that running 'gcis' and make file 'index' first before running 'gcis_uni'. \n");
+    printf(": ./gcis_uni \n");
+    printf("\nYou can set the name of inputfile by using option -i. \n");
+    printf(": ./gcis_uni -i <inputfile>\n");
+    printf("\nYou can set the name of outputfile by using option -o. \n");
+    printf(": ./gcis_uni -o <outputfile>\n");
+    printf("\n");
+    printf("\n");
+    return 0;
+}
+
+int main(int argc, char *argv[]){
+    int onhelp = 0;
+    for(int i = 0;i<argc;i++){
+    //printf("[%d : %s]",i,argv[i]);
+    if('-'==argv[i][0]){ //符号
+        if('i'==argv[i][1]){ //input
+            int k = strlen(argv[i+1]);
+            printf("<<%d,%d,%d>>",k,sizeof(argv[i+1]),sizeof(argv[i+1][0]));
+            fname = (char*)malloc(k);
+            for(int k2=0;k2<k;k2++){fname[k2]=argv[i+1][k2];}
+        }
+        if('o'==argv[i][1]){ //output
+            int k = strlen(argv[i+1]);
+            wname = (char*)malloc(k);
+            for(int k2=0;k2<k;k2++){wname[k2]=argv[i+1][k2];}
+        }
+        if('h'==argv[i][1]){shelp();return 0;} //help
+        i++;
+        continue;
+    }
+  }
+  if(fname==NULL){
+    int k = strlen(defaultfname);
+    fname = (char*)malloc(k);
+    for(int k2=0;k2<k;k2++){fname[k2]=defaultfname[k2];}
+  }
+  if(wname==NULL){
+    int k = strlen(defaultwname);
+    wname = (char*)malloc(k);
+    for(int k2=0;k2<k;k2++){wname[k2]=defaultwname[k2];}
+  }
     FILE *fp;
-    char wname[] = "index"; //index file name
     unsigned int *D;
     int *D_2;
     int i = 0;int round = 0;dcs[0] = 0;dc2s[0] = 0; 
     unsigned char chr;
     unsigned int a;
-    fp = fopen(wname, "r");
+    fp = fopen(fname, "r");
     int flag = 0; //0:loops,1:dcs,2:dc2s,3:D,4:D_2,5:D3,6:NS
     int w = 1;
     while(flag<8){

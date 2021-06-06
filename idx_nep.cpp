@@ -8,22 +8,24 @@
 #include <time.h>
 #include <filesystem>
 
-#define MMODE 3
-#define MLONG 5000
+#define MMODE 2
+#define MLONG 17
 #define MREP 20
-#define MSTART 48539476
-#define MRANDRANGE 900
-#define MRANDBASE 100
-#define CHECKFLAG 0 //if 1, check answers
-#define DEBUGFLAG 0 //if 1, show the process
+#define MSTART 10162
+#define CHECKFLAG 1 //if 1, check answers
+#define DEBUGFLAG 1 //if 1, show the process
 //MMODE = 
 // 0 : open query.txt
 // 1 : qnameで指定されているファイルの中からランダムに MLONG 文字の文字列を選択し，
 //     MREP 回実行する．
 // 2 : 指定されているファイルの中のMSTARTからMLONG文字の文字列を選択肢，照合する
 
-char qname[] = "inputsample"; //ちゃんとここも変える
-char wname[] = "index"; //index file name
+char *inname,*qname;
+char defaultinname[] = "index";
+char defaultqname[] = "inputsample.txt";
+int runmode = -1; //mode
+int plength = -1; //patternlength
+int querysuu = -1; //the number of query
 int checkans[1000];
 int checkpz[5];
 int occart[10]; //-1,-1,X,ofc,-1,-1,-1
@@ -46,7 +48,7 @@ int imcokep2 = 0;
 int jswt = 0;
 int ocofs = 0;
 int *m;
-unsigned int *NS;
+int *NS;
 int NSsize;
 int transk = 0;
 int fround = 0;
@@ -572,7 +574,7 @@ void findinround1(unsigned int *D,int *D_2,int *D_3,int tg,int round,int pofs){
 
 int findinNS(unsigned int *D,int *D_2,int *D_3,int startm,int mrlen,int round,int *kmpc,int *B1,int *B2,int *B3,int *Ls,int *Rs){
     if(DEBUGFLAG==1){
-        printf("\nNSから探す[%d]\nkmpc=",mrlen);
+        printf("\nNSから直接探す[%d](%d)\nkmpc=",mrlen,ocofs);
         for(int i2 = 0;i2<mrlen;i2++){printf("%d ",kmpc[i2]);}
         printf("\n");
         for(int i2 = 0;i2<mrlen;i2++){printf("%d ",m[startm+i2]);}
@@ -580,12 +582,13 @@ int findinNS(unsigned int *D,int *D_2,int *D_3,int startm,int mrlen,int round,in
     int tg,kpofs;
     tg = 0;kpofs=0;
         for(int y8=0;y8<NSsize;y8++){
+            //if(y8>=300 && y8<500){printf("\n<%d - %d>",y8,kpofs);}
             for(int y9=0;y9<mrlen;y9++){
                 if(NS[y9+y8]+dc2s[fround-1]==m[startm+tg]){
                     tg++;
                     if(DEBUGFLAG==1){printf("\n%d:%d(%d - %d)[+%d]",kpofs,NS[y9+y8]+dc2s[fround-1],y9+y8,tg,D_3[NS[y9+y8]+dc2s[fround-1]]);}
                     if(tg==mrlen){
-                        if(DEBUGFLAG==1){printf("パターン発見[%d]",kpofs-ocofs);}
+                        if(DEBUGFLAG==1){printf("[%d]パターン発見[%d]",y8,kpofs-ocofs);}
                         int e2[2] = {NS[y8-1]+dc2s[fround-1],NS[y8-2]+dc2s[fround-1]};
                         int tk = rpsck(D,D_2,Ls,B1,e2,fround-1);
                         if(DEBUGFLAG==1){if(tk==-1){printf("\nこれはコアではない2");}}
@@ -601,7 +604,7 @@ int findinNS(unsigned int *D,int *D_2,int *D_3,int startm,int mrlen,int round,in
                             }
                         }
                         kpofs+=D_3[NS[y8]+dc2s[fround-1]];
-                        tg=0;break;
+                        tg=0;break; //y9 break
                     }
                 }
                 else{ //不一致
@@ -1053,11 +1056,13 @@ int patternmatching2(unsigned int *D,int *D_2,int *D_3,int absm){
         if(round>0){
             for(int i = 0;i<B1[round];i++){ocofs+=D_3[m[startm+i]];}}
         startm += B1[round];mrlen = B3[round];round++;}
-    if(coredata[0]>0){ //Aコアがあるのでその分だけocofsをずらす
-        for(int i = 0;i<coredata[2];i++){
-            ocofs+=D_3[m[startm+i]];
-            if(DEBUGFLAG==1){
-                printf("\n[A]ocofs+=%d(%d)",D_3[m[startm+i]],ocofs);
+    if(round!=fround){    
+        if(coredata[0]>0){ //Aコアがあるのでその分だけocofsをずらす
+            for(int i = 0;i<coredata[2];i++){
+                ocofs+=D_3[m[startm+i]];
+                if(DEBUGFLAG==1){
+                    printf("\n[A]ocofs+=%d(%d)",D_3[m[startm+i]],ocofs);
+                }
             }
         }
     }
@@ -1102,6 +1107,7 @@ int patternmatching2(unsigned int *D,int *D_2,int *D_3,int absm){
     if(CHECKFLAG==2){return 0;}
     if(transk==fround){
         findinNS(D,D_2,D_3,startm,mrlen,round,kmpc,B1,B2,B3,Ls,Rs);
+        return 0;
     }
     if(coredata[0]==-1){
         if(DEBUGFLAG==1){printf("Bルートで検索");}
@@ -1158,13 +1164,13 @@ int qrmreload(int c){ //mの中に，english.001.2 の中からc文字をもう�
 
 int qrmloadset(int jo){ //c番目を読む
     FILE *fp;
-    long long int qsize = std::filesystem::file_size("../esp-index-I-master/src/makingquery.txt"); //qsizeには，ファイルのサイズが書かれているはず
-    fp = fopen("query.txt", "r"); // open file or return null
+    long long int qsize = std::filesystem::file_size(qname); //qsizeには，ファイルのサイズが書かれているはず
+    fp = fopen(qname,"r"); // open file or return null
     if(fp == NULL) {
         printf("%s such file doesn't exist!\n", qname);
         return -1;
     }
-    int c = qsize/10;
+    int c = qsize/querysuu;
     fseek(fp,jo*c,SEEK_SET); //指定したシークまで移動する
     for(int i=0;i<c;i++) { //c文字
         char chr = fgetc(fp);
@@ -1188,7 +1194,7 @@ int qrmload(int c,int jo){ //mの中に，english.001.2 の中からc文字を�
     int i = 0;
     jswt = 0;
     int rlen = rand()%(qsize-c);
-    if(MMODE==2){rlen = MSTART;}
+    if(runmode==2){rlen = MSTART;}
     ancl[jo][4] = rlen;
     fseek(fp,rlen,SEEK_SET); //指定したシークまで移動する
     printf("\nquery%d : [%lld]rlen[%d]から[%d]文字(%lld)\n[",jo,qsize,rlen,c,qsize);
@@ -1204,51 +1210,85 @@ int qrmload(int c,int jo){ //mの中に，english.001.2 の中からc文字を�
     return c;
 }
 
-int copmes(int setA,int setB){
-    //2[長さ]4[position]3[trans]0[ans]1[core]5[時間]
-    char jikuname[6][20] = {"number of answer","number of core","pattern length","number of transform","position(debug)","time(ms)"};
-
-    //testgfdataに配列をまず書き出す
-    printf("\n書き出しを行っています\n");
-    FILE *fp;
-    char wname[] = "testgfdata";
-    fp = fopen(wname, "w"); // open file or return null
-    int xlist1[MREP];
-    double ylist1[MREP];
-    int xmin = 9999;int xmax = 0;
-    double ymin = 9999;double ymax = 0;
-    for(int i=0;i<MREP;i++){
-        xlist1[i] = ancl[i][setA];
-        if(xmin>xlist1[i]){xmin=xlist1[i];}
-        if(xmax<xlist1[i]){xmax=xlist1[i];}
-        if(setB==5){ylist1[i] = ancd[i];}
-        else{ylist1[i] = double(ancl[i][setB]);}
-        if(ymin>ylist1[i]){ymin=ylist1[i];}
-        if(ymax<ylist1[i]){ymax=ylist1[i];}
-        int hok = ((ancl[i][0]+4)/5)*5-4;
-        int hok2 = ((ancl[i][0]+4)/5)*5;
-        fprintf(fp,"%d~%d %d %d %d %d %.3f\n",hok,hok2,ancl[i][1],ancl[i][2],ancl[i][3],ancl[i][4],ancd[i]); //0:loops
-    }
-    fclose(fp); // open file or return null
-    printf("[%d-%d][%f-%f]",xmin,xmax,ymin,ymax);
-    FILE *gp; //testgfdataを書き出す
-    gp = popen("gnuplot -persist", "w"); // open file or return null
-    fprintf(gp,"set terminal pdf\nset output 'gzo/output(schA)%d-%d.pdf'\n",setA,setB);
-    fprintf(gp,"set xrange [%d:%d]\n",xmin,xmax+5);
-    fprintf(gp,"set yrange [%.2f:%.2f]\n",ymin,ymax+5);
-    fprintf(gp,"set ylabel '%s'\n",jikuname[setB]);
-    fprintf(gp,"set xlabel '%s'\n",jikuname[setA]);
-    fprintf(gp,"plot 'testgfdata' using %d:%d title '%s'\n",setA+1,setB+1,"GCIS");
-    fflush(gp);
-    fprintf(gp,"exit\n");
-    pclose(gp); // open file or return null
-    printf("書き出しが正常に行われているはず");
+int shelp(){
+    printf("--Simple Usage------------------\n");
+    printf("\nRead 'codeindex' and search using <queryfile>. \n");
+    printf(": ./idx_nep -q <queryfile>\n");
+    printf("\nYou can set the indexfile by using option -i. \n");
+    printf(": ./idx_nep -i <indexfile> -q <queryfile>\n");
+    printf("\nYou can set the location mode 0 ~ 4 by using option -m. \n");
+    printf("mode 3 is used by default.(defined 'MMODE' in this code.)\n");
+    printf(": ./idx_nep -i <indexfile> -q <queryfile> -m <mode>\n");
+    printf("\nYou can set the number of query by using option -r. \n");
+    printf("10 is used by default.(defined 'MREP' in this code.)\n");
+    printf(": ./idx_nep -i <indexfile> -q <queryfile> -m <mode> -r <times>\n");
+    printf("\nYou can set the length of pattern by using option -l. \n");
+    printf("10 is used by default.(defined 'MLONG' in this code.)\n");
+    printf(": ./idx_nep -i <indexfile> -q <queryfile> -m <mode> -l <length>\n");
+    printf("\n");
+    printf("\n");
     return 0;
 }
 
 
-int main()
+int main(int argc, char *argv[])
 {
+    for(int i = 0;i<argc;i++){
+      if('-'==argv[i][0]){ //符号
+        if('i'==argv[i][1]){ //input
+            int k = strlen(argv[i+1]);
+            inname = (char*)malloc(k);
+            for(int k2=0;k2<k;k2++){inname[k2]=argv[i+1][k2];}
+        }
+        if('q'==argv[i][1]){ //input
+            int k = strlen(argv[i+1]);
+            qname = (char*)malloc(k);
+            for(int k2=0;k2<k;k2++){qname[k2]=argv[i+1][k2];}
+        }
+        if('m'==argv[i][1]){ //mode
+            runmode=0;
+            for(int k = 0;k<strlen(argv[i+1]);k++){
+                if(10 > argv[i+1][k]-'0' && argv[i+1][k]-'0'>=0){
+                runmode *=10;
+                runmode += argv[i+1][k] - '0';
+                }
+                else{break;}
+            }
+        }
+        if('r'==argv[i][1]){ //mode
+            querysuu=0;
+            for(int k = 0;k<strlen(argv[i+1]);k++){
+                if(10 > argv[i+1][k]-'0' && argv[i+1][k]-'0'>=0){
+                querysuu *=10;
+                querysuu += argv[i+1][k] - '0';
+                }
+                else{break;}
+            }
+        }
+        if('l'==argv[i][1]){ //mode
+            plength=0;
+            for(int k = 0;k<strlen(argv[i+1]);k++){
+                if(10 > argv[i+1][k]-'0' && argv[i+1][k]-'0'>=0){
+                plength *=10;
+                plength += argv[i+1][k] - '0';
+                }
+                else{break;}
+            }
+        }
+        if('h'==argv[i][1]){shelp();return 0;} //help
+        i++;continue;
+      }
+    }
+    if(qname==NULL){shelp();return 0;} //
+    if(inname==NULL){
+      int k = strlen(defaultinname);
+      inname = (char*)malloc(k);
+      for(int k2=0;k2<k;k2++){inname[k2]=defaultinname[k2];}
+    }
+    if(runmode==-1){runmode=MMODE;}
+    if(plength==-1){plength=MLONG;}
+    if(querysuu==-1){querysuu=MREP;}
+
     long long int sps = 0;
     long long int spsmax = 0;
     FILE *fp;
@@ -1266,8 +1306,7 @@ int main()
 
     unsigned char chr;
     unsigned int a;
-    
-    fp = fopen(wname, "r");
+    fp = fopen(inname, "r");
     int flag = 0; //0:loops,1:dcs,2:dc2s,3:D,4:D_2,5:D_3,6:NS
     int w = 1;int tm1;
     while(flag<8){
@@ -1277,7 +1316,7 @@ int main()
         fscanf(fp,"%c",&chr);a += chr*65536*256;
         //if(w<30){printf("\n[%d]:%u",flag,a);}
         if(flag==7){NS[w]=a;w++;if(w==tm1){flag++;printf("\n-finishing load index-\n");}}
-        if(flag==6){tm1=a;NS = (unsigned int*)malloc(4*tm1);flag++;}
+        if(flag==6){tm1=a;NS = (int*)malloc(4*tm1);flag++;}
         if(flag==5){D_3[w]=a;w++;if(w==dc2s[loops]){flag++;w=0;}}
         if(flag==4){D_2[w]=a;w++;if(w==dc2s[loops]+1){flag++;w=0;}}
         if(flag==3){D[w]=a;w++;if(w==dcs[loops]){flag++;w=0;}}
@@ -1288,36 +1327,31 @@ int main()
 
     }
     fclose(fp);
-    if(MMODE==5){ //情報を開示して終わり
-        printf("\n & %d & %d & %d",dc2s[loops],tm1+dcs[loops],tm1);
-        exit(4);
-
-    }
     pn = tm1;
     NSsize = pn;
     round=loops;
     fround = round;
     double avt = 0;
     //int jogaipar = 0;
-    if(MMODE==2){
-        msize = qrmload(MLONG,0);
+    if(runmode==2){
+        msize = qrmload(plength,0);
         clock_t timesb = clock();
         patternmatching2(D,D_2,D_3,msize); 
         clock_t timee = clock();
         const double time = static_cast<double>(timee - timesb) / CLOCKS_PER_SEC * 1000.0;
         printf("\n[length of the pattern : %d] / (ans:%d / core:%d ) : time %lf[ms]\n",msize,ans,coreans,time);
         if(CHECKFLAG==1){
-            msize = qrmload(MLONG,0);
+            msize = qrmload(plength,0);
             anscheck(msize);
         }
     }
-    if(MMODE==1 || MMODE == 3){
+    if(runmode==1 || runmode == 3){
         float avetransk = 0.00;
         double pertime = 0.00;
-        if(MMODE==3){srand((unsigned int)time(NULL));}
+        if(runmode==3){srand((unsigned int)time(NULL));}
         for(int jo = 0;jo < MREP;jo++){
-            int ralen = MRANDBASE+rand()%MRANDRANGE;
-            if(MMODE==1){ralen = MLONG;}
+            int ralen = plength;
+            if(runmode==1){ralen = plength;}
             msize = qrmload(ralen,jo);
             //if(jswt==1){printf("\n除外");jogaipar++;jo--;continue;}
             if(DEBUGFLAG==1){
@@ -1349,11 +1383,9 @@ int main()
         }
         printf("\navarage time : %lf[ms]\n avarage transform : %f times\n",avt/MREP,avetransk/MREP);
         printf("[transformation time : %.3f %]\n",pertime/MREP);
-        copmes(0,5); //グラフ作成
-        copmes(1,5); //グラフ作成
     }
-    if(MMODE==4){
-        for(int jo = 0;jo < 10;jo++){
+    if(runmode==4){
+        for(int jo = 0;jo < querysuu;jo++){
             msize = qrmloadset(jo);
             //if(jswt==1){printf("\n除外");jogaipar++;jo--;continue;}
             if(DEBUGFLAG==1){
@@ -1370,22 +1402,18 @@ int main()
             ancl[jo][1] = coreans;
             ancl[jo][2] = msize;
             ancl[jo][3] = transk;
+            ancl[jo][4] = -1;
             ancd[jo] = time;
             avt += time;
         }
-        printf("avarage time : %lf[ms]",avt/10);
-        for(int jo=0;jo<10;jo++){
+        printf("avarage time : %lf[ms]",avt/querysuu);
+        for(int jo=0;jo<querysuu;jo++){
             printf("\n(P-length : %d from position %d[%d trans] / ans:%d / core:%d / time %lf[ms])",ancl[jo][2],ancl[jo][4],ancl[jo][3],ancl[jo][0],ancl[jo][1],ancd[jo]);
             //printf("\n%d\n%d\n%d\n%d\n%d\n%lf",ancl[jo][2],ancl[jo][4],ancl[jo][3],ancl[jo][0],ancl[jo][1],ancd[jo]);
         }
-        for(int setx=0;setx<6;setx++){
-            for(int sety=setx+1;sety<6;sety++){
-            copmes(setx,sety);
-            }
-        }
     }
     
-    if(MMODE==0){
+    if(runmode==0){
         msize = queryload();
         clock_t timesb = clock();
         patternmatching2(D,D_2,D_3,msize);    

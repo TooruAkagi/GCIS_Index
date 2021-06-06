@@ -7,12 +7,10 @@
 #include <filesystem>
 #include <vector>
 
-#define MMODE 3
-#define MLONG 10000
-#define MREP 20
-#define MSTART 45691686
-#define MRANDRANGE 1
-#define MRANDBASE 10000
+#define MMODE 3 //default mode
+#define MLONG 100 //default length
+#define MREP 20 //default number of query
+#define MSTART 11302
 #define CHECKFLAG 1 //これが1の場合は，結果が全部本当に正しいかをファイルをひらきながら全部チェックする
 #define DEBUGFLAG 1 //1ならデバッグしながら検索する
 //MMODE = 
@@ -21,7 +19,11 @@
 //     MREP 回実行する．
 // 2 : 指定されているファイルの中のMSTARTからMLONG文字の文字列を選択肢，照合する
 
-char qname[] = "inputsample";
+char *inname,*qname;
+char defaultinname[] = "codeindex";
+int runmode = -1; //mode
+int plength = -1; //patternlength
+int querysuu = -1; //the number of query
 int ancl[MREP][5];
 double ancd[MREP];
 int checkpz[5];
@@ -42,7 +44,7 @@ int hh = 0;
 int lpurse = 65536; //定数
 int spurse = 64; //定数
 int spursesuu = lpurse / spurse; //定数
-unsigned int *NS;
+int *NS;
 unsigned short int *d2topsub2,*k3sub2,*D_3m;
 int *d2topsub,*k3sub,*D_3;
 //int ksize = 200000000;int k3size = 4000000; //配列暫定サイズの保管
@@ -1337,10 +1339,13 @@ int patternmatching1(int *m,int absm,int fround){
         }
         if(round==0){ocofs+=B1[round];}
         if(round>0){for(int i = 0;i<B1[round];i++){ocofs+=D3access(m[startm+i]);/*printf("\n[=%d]",m[startm+i]);*/}}
-        startm += B1[round]; 
-        mrlen = B3[round]; //mrlen stores the length of core (written in the function;)
-        //printf("]\n startm = %d,mrlen = %d",startm,mrlen);
-        round++;
+        startm += B1[round];mrlen = B3[round];round++;}
+    if(round!=fround){    
+        if(coredata[0]>0){ //Aコアがあるのでその分だけocofsをずらす
+            for(int i = 0;i<coredata[2];i++){
+                ocofs+=D3access(m[startm+i]);
+            }
+        }
     }
     transk = round;
     if(DEBUGFLAG==1){printf("rs==%d/%d\n",round,fround);}
@@ -1398,13 +1403,13 @@ int patternmatching1(int *m,int absm,int fround){
 
 int qrmloadset(int *m,int jo){ //c番目を読む
     FILE *fp;
-    long long int qsize = std::filesystem::file_size("../esp-index-I-master/src/makingquery.txt"); //qsizeには，ファイルのサイズが書かれているはず
-    fp = fopen("../esp-index-I-master/src/makingquery.txt", "r"); // open file or return null
+    long long int qsize = std::filesystem::file_size(qname); //qsizeには，ファイルのサイズが書かれているはず
+    fp = fopen(qname,"r"); // open file or return null
     if(fp == NULL) {
         printf("%s such file doesn't exist!\n", qname);
         return -1;
     }
-    int c = qsize/10;
+    int c = qsize/querysuu;
     fseek(fp,jo*c,SEEK_SET); //指定したシークまで移動する
     for(int i=0;i<c;i++) { //c文字
         char chr = fgetc(fp);
@@ -1419,7 +1424,6 @@ int qrmloadset(int *m,int jo){ //c番目を読む
 
 
 int queryload(int *m){
-    char qname[] = "query.txt";
     char chr;
     FILE *fp;
     long long int qsize = std::filesystem::file_size(qname);
@@ -1449,7 +1453,7 @@ int qrmload(int *m,int c,int jo){ //mの中に，english.001.2 の中からc文�
     int i = 0;
     jswt = 0;
     int rlen = rand()%(qsize-c);
-    if(MMODE==2){rlen = MSTART;}
+    if(runmode==2){rlen = MSTART;}
     ancl[jo][4] = rlen;
     fseek(fp,rlen,SEEK_SET);
     printf("\nrlen[%d]から[%d]文字(%lld)\n[",rlen,c,qsize);
@@ -1512,13 +1516,87 @@ int qrmreload(int *m,int c){ //mの中に，english.001.2 の中からc文字を
     return checkpz[1];
 }
 
-int main(){
+int shelp(){
+    printf("--Simple Usage------------------\n");
+    printf("\nRead 'codeindex' and search using <queryfile>. \n");
+    printf(": ./idx_uni -q <queryfile>\n");
+    printf("\nYou can set the indexfile by using option -i. \n");
+    printf(": ./idx_uni -i <indexfile> -q <queryfile>\n");
+    printf("\nYou can set the location mode 0 ~ 4 by using option -m. \n");
+    printf("mode 3 is used by default.(defined 'MMODE' in this code.)\n");
+    printf(": ./idx_uni -i <indexfile> -q <queryfile> -m <mode>\n");
+    printf("\nYou can set the number of query by using option -r. \n");
+    printf("10 is used by default.(defined 'MREP' in this code.)\n");
+    printf(": ./idx_uni -i <indexfile> -q <queryfile> -m <mode> -r <times>\n");
+    printf("\nYou can set the length of pattern by using option -l. \n");
+    printf("10 is used by default.(defined 'MLONG' in this code.)\n");
+    printf(": ./idx_uni -i <indexfile> -q <queryfile> -m <mode> -l <length>\n");
+    printf("\n");
+    printf("\n");
+    return 0;
+}
+
+int main(int argc, char *argv[]){
+    for(int i = 0;i<argc;i++){
+      if('-'==argv[i][0]){ //符号
+        if('i'==argv[i][1]){ //input
+            int k = strlen(argv[i+1]);
+            inname = (char*)malloc(k);
+            for(int k2=0;k2<k;k2++){inname[k2]=argv[i+1][k2];}
+        }
+        if('q'==argv[i][1]){ //input
+            int k = strlen(argv[i+1]);
+            qname = (char*)malloc(k);
+            for(int k2=0;k2<k;k2++){qname[k2]=argv[i+1][k2];}
+        }
+        if('m'==argv[i][1]){ //mode
+            runmode=0;
+            for(int k = 0;k<strlen(argv[i+1]);k++){
+                if(10 > argv[i+1][k]-'0' && argv[i+1][k]-'0'>=0){
+                runmode *=10;
+                runmode += argv[i+1][k] - '0';
+                }
+                else{break;}
+            }
+        }
+        if('r'==argv[i][1]){ //mode
+            querysuu=0;
+            for(int k = 0;k<strlen(argv[i+1]);k++){
+                if(10 > argv[i+1][k]-'0' && argv[i+1][k]-'0'>=0){
+                querysuu *=10;
+                querysuu += argv[i+1][k] - '0';
+                }
+                else{break;}
+            }
+        }
+        if('l'==argv[i][1]){ //mode
+            plength=0;
+            for(int k = 0;k<strlen(argv[i+1]);k++){
+                if(10 > argv[i+1][k]-'0' && argv[i+1][k]-'0'>=0){
+                plength *=10;
+                plength += argv[i+1][k] - '0';
+                }
+                else{break;}
+            }
+        }
+        if('h'==argv[i][1]){shelp();return 0;} //help
+        i++;continue;
+      }
+    }
+    if(qname==NULL){shelp();return 0;} //
+    if(inname==NULL){
+      int k = strlen(defaultinname);
+      inname = (char*)malloc(k);
+      for(int k2=0;k2<k;k2++){inname[k2]=defaultinname[k2];}
+    }
+    if(runmode==-1){runmode=MMODE;}
+    if(plength==-1){plength=MLONG;}
+    if(querysuu==-1){querysuu=MREP;}
     FILE *fp;
-    char wname[] = "codeindex"; //index file name
     dcs[0] = 0;dc2s[0] = 0;ccs[0] = 0;cc2s[0] = 0; 
     unsigned char chr;
     unsigned int a;
-    fp = fopen(wname, "r");
+    fp = fopen(inname, "r");
     int flag = 0; //0:loops,1:dcs,2:dc2s,3:D,4:D_2,5:D3,6:NS
     int w = 0;
     while(flag<11){ //18種類の配列を，その様式ごとにindexファイルから拾う
@@ -1557,7 +1635,7 @@ int main(){
             Sizelist[w]=a;printf("\nSizelist[%d] = %d",w,a);
             if(w==10){
                 flag++;w=1; //各種サイズを設定
-                NS = (unsigned int*)malloc(4*Sizelist[0]);
+                NS = (int*)malloc(4*Sizelist[0]);
                 D_3s = (unsigned char*)malloc(Sizelist[1]);
                 D_3m = (unsigned short int*)malloc(2*(Sizelist[2]-Sizelist[1]));
                 d2topsub = (int*)malloc(4*Sizelist[5]);
@@ -1622,8 +1700,8 @@ int main(){
     msize = queryload(m);
     double avt = 0;
     int jogaipar = 0;
-    if(MMODE==2){
-        msize = qrmload(m,MLONG,0);
+    if(runmode==2){
+        msize = qrmload(m,plength,0);
         clock_t timesb = clock();
         patternmatching1(m,msize,loops);
         clock_t timee = clock();
@@ -1631,16 +1709,16 @@ int main(){
         printf("\n[length of the pattern : %d] / ans:%d / core:%d : time %lf[ms]\n",msize,ans,coreans,time);
         printf("\nvain = %d",vain);
         if(CHECKFLAG==1){
-            msize = qrmload(m,MLONG,0);
+            msize = qrmload(m,plength,0);
             anscheck(msize,m);
         }
     }
-    if(MMODE==1 || MMODE==3){
+    if(runmode==1 || runmode==3){
         double pertime = 0.00;
-        if(MMODE==3){srand((unsigned int)time(NULL));}
+        if(runmode==3){srand((unsigned int)time(NULL));}
         for(int jo = 0;jo < MREP;jo++){
-            int ralen = MRANDBASE+rand()%MRANDRANGE;
-            if(MMODE==1){ralen = MLONG;}
+            int ralen = plength;
+            if(runmode==1){ralen = plength;}
             msize = qrmload(m,ralen,jo);
             clock_t timesb = clock();
             patternmatching1(m,msize,loops);
@@ -1665,13 +1743,13 @@ int main(){
         printf("avarage time : %lf[ms]",avt/MREP);
         printf("除外数 %d / %d",jogaipar,jogaipar+MREP);
         for(int jo=0;jo<MREP;jo++){
-            printf("\n(P-length : %d from position %d[%d trans] / ans:%d / core:%d / time %lf[ms])",ancl[jo][2],ancl[jo][4],ancl[jo][3],ancl[jo][0],ancl[jo][1],ancd[jo]);
+            printf("\n(%d : P-length : %d from position %d[%d trans] / ans:%d / core:%d / time %lf[ms])",jo,ancl[jo][2],ancl[jo][4],ancl[jo][3],ancl[jo][0],ancl[jo][1],ancd[jo]);
             //printf("\n%d\n%d\n%d\n%d\n%d\n%lf",ancl[jo][2],ancl[jo][4],ancl[jo][3],ancl[jo][0],ancl[jo][1],ancd[jo]);
         }
         printf("\n[transformation time : %.3f %]\n",pertime/MREP);
     }
-    if(MMODE==4){
-        for(int jo = 0;jo < 10;jo++){
+    if(runmode==4){
+        for(int jo = 0;jo < querysuu;jo++){
             msize = qrmloadset(m,jo);
             //if(jswt==1){printf("\n除外");jogaipar++;jo--;continue;}
             if(DEBUGFLAG==1){
@@ -1691,13 +1769,13 @@ int main(){
             ancd[jo] = time;
             avt += time;
         }
-        printf("avarage time : %lf[ms]",avt/10);
-        for(int jo=0;jo<10;jo++){
+        printf("avarage time : %lf[ms]",avt/querysuu);
+        for(int jo=0;jo<querysuu;jo++){
             printf("\n(P-length : %d from position %d[%d trans] / ans:%d / core:%d / time %lf[ms])",ancl[jo][2],ancl[jo][4],ancl[jo][3],ancl[jo][0],ancl[jo][1],ancd[jo]);
             //printf("\n%d\n%d\n%d\n%d\n%d\n%lf",ancl[jo][2],ancl[jo][4],ancl[jo][3],ancl[jo][0],ancl[jo][1],ancd[jo]);
         }
     }
-    if(MMODE==0){
+    if(runmode==0){
         msize = queryload(m);
         clock_t timesb = clock();
         patternmatching1(m,msize,loops);

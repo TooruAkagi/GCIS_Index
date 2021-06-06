@@ -11,6 +11,9 @@
 #define OVERTRANSFORM 0 //the least times of repetation
 #define TRANSTIMES 99 //the maximum limit of repeation
 
+char *fname,*wname;
+char defaultfname[] = "inputsample.txt";
+char defaultwname[] = "index";
 int (*nextsort)[3];
 int sortstack = 0; 
 int tempC = 260;
@@ -220,7 +223,6 @@ int write6(unsigned int *D,int *D_2,int *D_3,unsigned int *NS,int NSsize){
     FILE *fp;
     //unsigned char chr;
     //unsigned int a;
-    char wname[] = "index";
     fp = fopen(wname, "w"); // open file or return null
     fwrite(&loops, sizeof(int),1, fp); //0:loops
     fwrite(&dcs[1], sizeof(int), loops, fp); //1:dcs[1][2][3]...
@@ -234,8 +236,18 @@ int write6(unsigned int *D,int *D_2,int *D_3,unsigned int *NS,int NSsize){
     return 0;
 }
 
+int shelp(){
+    printf("--Simple Usage------------------\n");
+    printf("\nRead <file> and make <indexfile>. \n");
+    printf(": ./gcis -i <file>\n");
+    printf("\nYou can set the name of output by using option -o. \n");
+    printf(": ./gcis -i <file> -o <outputfile>\n");
+    printf("\n");
+    printf("\n");
+    return 0;
+}
 
-int main()
+int main(int argc, char *argv[])
 {
     long long int sps = 0;
     long long int spsod = 0;
@@ -247,18 +259,38 @@ int main()
     int round = 0;
     
     long long int fsize = 0;
-    char fname2[100];
-    printf("\nファイル名を入力:");
-    scanf("%s", &fname2);
-    fsize = std::filesystem::file_size(fname2);
+    for(int i = 0;i<argc;i++){
+      if('-'==argv[i][0]){ //符号
+        if('i'==argv[i][1]){ //input
+            int k = strlen(argv[i+1]);
+            fname = (char*)malloc(k);
+            for(int k2=0;k2<k;k2++){fname[k2]=argv[i+1][k2];}
+        }
+        if('o'==argv[i][1]){ //input
+            int k = strlen(argv[i+1]);
+            wname = (char*)malloc(k);
+            for(int k2=0;k2<k;k2++){wname[k2]=argv[i+1][k2];}
+        }
+        if('h'==argv[i][1]){shelp();return 0;} //help
+        i++;continue;
+      }
+    }
+    printf("\ninput :[%s]\n",fname);
+    if(fname==NULL){shelp();return 0;}
+    if(wname==NULL){
+      int k = strlen(defaultwname); 
+      wname = (char*)malloc(k);
+      for(int k2=0;k2<k;k2++){wname[k2]=defaultwname[k2];}
+    }
+    fsize = std::filesystem::file_size(fname);
     char chr;
     clock_t timesb = clock();
-    fp = fopen(fname2, "r"); // open file or return null
+    fp = fopen(fname, "r"); // open file or return null
     if(fp == NULL) {
-        printf("%s such file doesn't exist!\n", fname2);
+        printf("[%s] such file doesn't exist!\n", fname);
         return 1;
     }
-    printf("\nfile %s 's size = %lld byte Last = ",fname2,fsize);
+    printf("\nfile %s 's size = %lld byte Last = ",fname,fsize);
     T= (unsigned int*)malloc(fsize*4);
     for(i=0;i<fsize;i++) {
         chr = fgetc(fp);
