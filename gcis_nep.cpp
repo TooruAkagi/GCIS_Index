@@ -6,7 +6,7 @@
 #include <math.h>
 #include <time.h>
 #include <filesystem>
-// #include <cstring> //depends on your enviroment
+#include <cstring> //depends on your enviroment
 
 #define DEBUGFLAG 0 // 1 -> display the process with printf
 #define OVERTRANSFORM 0 //the least times of repetation

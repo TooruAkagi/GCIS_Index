@@ -7,7 +7,7 @@
 #include <math.h>
 #include <time.h>
 #include <filesystem>
-// #include <cstring> //depends on your enviroment
+#include <cstring> //depends on your enviroment
 
 #define MMODE 2
 #define MLONG 17
@@ -16,10 +16,11 @@
 #define CHECKFLAG 1 //if 1, check answers
 #define DEBUGFLAG 1 //if 1, show the process
 //MMODE = 
-// 0 : open query.txt
-// 1 : qnameで指定されているファイルの中からランダムに MLONG 文字の文字列を選択し，
-//     MREP 回実行する．
-// 2 : 指定されているファイルの中のMSTARTからMLONG文字の文字列を選択肢，照合する
+// 0 : open [queryfile], regard it as a pattern
+// 1 : open [queryfile], select some ramdom strings of length [MLONG] in the file, and regard it as patterns
+// 2 : open [queryfile], select a fixed string of length [MLONG] in the file, and regard it as a pattern
+// 3 : mode 1, with srand()
+// 4 : open [queryfile], regard it as a seqence of [MREP] patterns
 
 char *inname,*qname;
 char defaultinname[] = "index";

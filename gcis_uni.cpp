@@ -5,7 +5,7 @@
 #include <sstream>   // istringstream
 #include <math.h>
 #include <filesystem>
-// #include <cstring> //depends on your enviroment
+#include <cstring> //depends on your enviroment
 
 char *fname,*wname;
 char defaultfname[] = "index";

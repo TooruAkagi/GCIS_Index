@@ -76,9 +76,9 @@ Before that, you must do $./gcis_nep and make "index" first.
 After running, "codeindex" will be generated.
 
 You can set the name of inputfile by using option -i .
-$ ./gcis_uni -i <inputfile>\n");
+$ ./gcis_uni -i <inputfile>
 You can set the name of outputfile by using option -o .
-$ ./gcis_uni -o <outputfile>\n");
+$ ./gcis_uni -o <outputfile>
 
 Default inputfile is "index", 
 Default outputfile is "codeindex".(it works with no option.)
@@ -113,7 +113,7 @@ if 1, all of the process of pattern matching is written in terminal.
 -----genpattern--------------------------------------------------
 
 You can make a pattern file of your dataset with the following command : 
-$ ./genpattern -i <inputfile>\n");
+$ ./genpattern -i <inputfile>
 "query_automake.txt" will be generated in this folder, and patterns are written in it.
 
 You can set the name of output by using option -o instead of "query_automake.txt".

@@ -6,19 +6,22 @@
 #include <math.h>
 #include <filesystem>
 #include <vector>
-// #include <cstring> //depends on your enviroment
+#include <cstring> //depends on your enviroment
 
 #define MMODE 3 //default mode
 #define MLONG 100 //default length
 #define MREP 20 //default number of query
 #define MSTART 11302
-#define CHECKFLAG 1 //これが1の場合は，結果が全部本当に正しいかをファイルをひらきながら全部チェックする
-#define DEBUGFLAG 1 //1ならデバッグしながら検索する
+#define CHECKFLAG 1 //if 1, check answers
+#define DEBUGFLAG 1 //if 1, show the process
 //MMODE = 
-// 0 : query.txtの中の文字列を照合
-// 1 : qnameで指定されているファイルの中からランダムに MLONG 文字の文字列を選択し，
-//     MREP 回実行する．
-// 2 : 指定されているファイルの中のMSTARTからMLONG文字の文字列を選択肢，照合する
+// 0 : open [queryfile], regard it as a pattern
+// 1 : open [queryfile], select some ramdom strings of length [MLONG] in the file, and regard it as patterns
+// 2 : open [queryfile], select a fixed string of length [MLONG] in the file, and regard it as a pattern
+// 3 : mode 1, with srand()
+// 4 : open [queryfile], regard it as a seqence of [MREP] patterns
+
+
 
 char *inname,*qname;
 char defaultinname[] = "codeindex";

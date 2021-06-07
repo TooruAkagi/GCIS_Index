@@ -7,7 +7,7 @@
 #include <math.h>
 #include <time.h>
 #include <filesystem>
-// #include <cstring> //depends on your enviroment
+#include <cstring> //depends on your enviroment
 
 #define MLONG 1000
 #define MREP 100
