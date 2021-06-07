@@ -7,6 +7,7 @@
 #include <math.h>
 #include <time.h>
 #include <filesystem>
+// #include <cstring> //depends on your enviroment
 
 #define MMODE 2
 #define MLONG 17

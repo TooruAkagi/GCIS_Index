@@ -6,6 +6,7 @@
 #include <math.h>
 #include <filesystem>
 #include <vector>
+// #include <cstring> //depends on your enviroment
 
 #define MMODE 3 //default mode
 #define MLONG 100 //default length

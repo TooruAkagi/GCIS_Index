@@ -6,6 +6,7 @@
 #include <math.h>
 #include <time.h>
 #include <filesystem>
+// #include <cstring> //depends on your enviroment
 
 #define DEBUGFLAG 0 // 1 -> display the process with printf
 #define OVERTRANSFORM 0 //the least times of repetation
@@ -239,9 +240,9 @@ int write6(unsigned int *D,int *D_2,int *D_3,unsigned int *NS,int NSsize){
 int shelp(){
     printf("--Simple Usage------------------\n");
     printf("\nRead <file> and make <indexfile>. \n");
-    printf(": ./gcis -i <file>\n");
+    printf(": ./gcis_nep -i <file>\n");
     printf("\nYou can set the name of output by using option -o. \n");
-    printf(": ./gcis -i <file> -o <outputfile>\n");
+    printf(": ./gcis_nep -i <file> -o <outputfile>\n");
     printf("\n");
     printf("\n");
     return 0;
