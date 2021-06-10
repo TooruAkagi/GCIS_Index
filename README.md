@@ -1,9 +1,9 @@
-# 🗂️  GCIS Index
+# \CID{1992}  GCIS Index
 
 GCIS index is a grammar-compressed full-text self-index capable of locating the occurrences of patterns. The index consists of two flavors: `gcis_nep` and `gcis_uni`, which use internally different representations (see the below reference for details).
 
 
-## 🚀Complete Test Run
+## \CID{2204}Complete Test Run
 
 A complete test-run of our index is done with the following lines:
 
@@ -13,17 +13,18 @@ cd GCIS_Index
 make
 ./genpattern -i inputsample.txt -o query.txt -l 100 -r 10
 #gcis_nep
-./gcis_nep_build -i inputsample.txt -o inputsample.gcis.nep.index
-./gcis_nep_locate -i inputsample.gcis.nep.index -q  query.txt -m 4 -l 100 -r 10
+./gcis_nep_build -i inputsample.txt -o index
+./gcis_nep_locate -i index -q query.txt -m 4 -l 100 -r 10
 #gcis uni
-./gcis_uni_build -i inputsample.txt -o inputsample.gcis.nep.index
-./gcis_uni_locate -i inputsample.gcis.nep.index -q  query.txt -m 4 -l 100 -r 10
+./gcis_nep_build -i inputsample.txt -o index
+./gcis_uni_build -i index -o codeindex
+./gcis_uni_locate -i codeindex -q query.txt -m 4 -l 100 -r 10
 ```
 
 In what follows, we demystify the meaning of the above lines.
 
 
-## ⚙️ Compilation
+## \CID{181} Compilation
 
 ```
 git clone https://github.com/TooruAkagi/GCIS_Index.git
@@ -42,7 +43,7 @@ Obtained Programs:
  - `gcis_uni_locate` : locates the occurrences of a pattern with gcis-uni
 
 
-## 🏗️ Index Construction
+## \CID{879} Index Construction
 Use either `gcis_nep_build` or `gcis_uni_build` for building our index data structure.
 
 Parameters:  `-i text-input [-o index-outputfile]`
@@ -51,7 +52,7 @@ Parameters:  `-i text-input [-o index-outputfile]`
 `
 
 
-## 🖨️ Generate a Pattern File
+## \CID{1988} Generate a Pattern File
 Our indexes use a pattern file as input for a locate query.
 You can either create manually such a file, use the original text input as pattern file, or generate a pattern file with our handy tool `genpattern`, which works as follows:
 
@@ -64,7 +65,7 @@ Parameters:
 - `-o`: output pattern file name (defaults to `query_automake.txt`)
 
 
-## 🔎 Locate Query
+## \CID{1848} Locate Query
 After index construction we can perform a locate query with a given pattern file. Note that we must use the same gcis-variant (nep or uni) for indexing and querying, otherwise we obtain a segmentation fault.
 The respective programs are `gcis_nep_locate` and `gcis_uni_locate`, which share the following syntax:
 
@@ -89,7 +90,7 @@ Other Parameters:
 - `-i`: the filename of the index (defauls to `index`) 
 
 
-## 🎌 Compile Flags
+## \CID{719} Compile Flags
 Our source files use the following preprocessor flags that can change the behavior of the execution as follows:
 
 #### `#define DEBUGFLAG`
@@ -111,6 +112,6 @@ recursions are reached.
  - tested with Arch Linux and gcc version 11.1.0
 
 
-## 📚 References
-- Tooru Akagi, Dominik Köppl, Yuto Nakashima, Shunsuke Inenaga, Hideo Bannai, Masayuki Takeda: [Grammar Index By Induced Suffix Sorting. CoRR abs/2105.13744 (2021)](https://arxiv.org/abs/2105.13744)
-- Daniel Saad Nogueira Nunes, Felipe A. Louza, Simon Gog, Mauricio Ayala-Rincón, Gonzalo Navarro: [A Grammar Compression Algorithm Based on Induced Suffix Sorting. DCC 2018: 42-51](https://doi.org/10.1109/DCC.2018.00012)
+## \CID{1797} References
+- Tooru Akagi, Dominik K\UTF{00F6}ppl, Yuto Nakashima, Shunsuke Inenaga, Hideo Bannai, Masayuki Takeda: [Grammar Index By Induced Suffix Sorting. CoRR abs/2105.13744 (2021)](https://arxiv.org/abs/2105.13744)
+- Daniel Saad Nogueira Nunes, Felipe A. Louza, Simon Gog, Mauricio Ayala-Rinc\UTF{00F3}n, Gonzalo Navarro: [A Grammar Compression Algorithm Based on Induced Suffix Sorting. DCC 2018: 42-51](https://doi.org/10.1109/DCC.2018.00012)
