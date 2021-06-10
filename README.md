@@ -1,141 +1,116 @@
-This folder contains programs for creating and testing gcis-nep and gcis-uni.
-First, move to this folder and execute make.
+# 🗂️  GCIS Index
 
-in terminal, 
-
-$cd GCIS_Pattern_Matching_master
-$make
-
-Successful if the following files are generated without any error : 
-
-gcis gcis_uni idx_nep idx_uni genpattern
-
-running it with -h shows some help.
-
------gcis_nep--------------------------------------------------
-You can make the index file of gcis-nep with the following command :
-$ ./gcis_nep -i <inputfile>
-Then put the name of input file you want the index. After running, "index" will be generated.
-To set the name of outputfile, type
-$ ./gcis_nep -i <inputfile> -o <outputfile>
+GCIS index is a grammar-compressed full-text self-index capable of locating the occurrences of patterns. The index consists of two flavors: `gcis_nep` and `gcis_uni`, which use internally different representations (see the below reference for details).
 
 
-you can edit variants in source file "gcis.cpp", to some settings
-[DEBUGFLAG]
-if 1, how this algorithm process while construction is written in terminal
+## 🚀Complete Test Run
 
-[OVERTRANSFORM]
-if over than 0, GCIS will repeat construction in (OVERTRANSFORM) times even if index size is larger than the one finishing in previous construction.
+A complete test-run of our index is done with the following lines:
 
-[TRANSTIMES]
-GCIS finishes construction at most (TRANSTIMES) times.
+```
+git clone https://github.com/TooruAkagi/GCIS_Index.git
+cd GCIS_Index
+make
+./genpattern -i inputsample.txt -o query.txt -l 100 -r 10
+#gcis_nep
+./gcis_nep_build -i inputsample.txt -o inputsample.gcis.nep.index
+./gcis_nep_locate -i inputsample.gcis.nep.index -q  query.txt -m 4 -l 100 -r 10
+#gcis uni
+./gcis_uni_build -i inputsample.txt -o inputsample.gcis.nep.index
+./gcis_uni_locate -i inputsample.gcis.nep.index -q  query.txt -m 4 -l 100 -r 10
+```
 
------idx_nep--------------------------------------------------
-You can test pattern matching of gcis-nep with the following command :
-$ ./idx_nep -q <queryfile>
-Before that, you must do $./gcis_nep and make "index" first.
-
-Default indexfile is "index". To set the indexfile, type
-$ ./idx_nep -q <queryfile> -i <indexfile>
-
-There are some modes about query, shown in detail.
-Default mode is 3. To set the mode, type
-$ ./idx_nep -q <queryfile> -i <indexfile> -m <mode>
-
-You can set <repetation> with -r, <length> with -l, respectively.
-They are used in mode 1 & 3 & 4.
-
-For example,
-$ ./idx_nep -q inputsample.txt -m 3 -r 10 -l 100
-is search 10 ramdom patterns of length 100 in inputsample.txt .
-
-you can edit variants in source file "idx_nep.cpp", to some settings
-[MMODE]
-use to select query.
-0 : open <queryfile> in this folder, and regard it as a pattern and search it.
-1 : open <queryfile>, and select a position in it regularly, and search  
-the pattern of length <length>. repeat <repetation> times.
-2 : open <queryfile>, and search the pattern of <length>, starts at [MSTART].
-3 : equal to mode 1, but a starting position is selected randomly.
-4 : open <queryfile> in this folder, and regard it as a sequence of <repetation> patterns, and search it.
-5 : not used
-
-[CHECKFLAG]
-if 1, program will checks the occurrence (open qname, and seek the locations GCIS answered)
-
-[DEBUGFLAG]
-if 1, all of the process of pattern matching is written in terminal.
+In what follows, we demystify the meaning of the above lines.
 
 
+## ⚙️ Compilation
 
------gcis_uni--------------------------------------------------
+```
+git clone https://github.com/TooruAkagi/GCIS_Index.git
+cd GCIS_Index
+make
+```
 
-You can make the index file of gcis-uni with the following command :
-$./gcis_uni
-Before that, you must do $./gcis_nep and make "index" first.
-After running, "codeindex" will be generated.
+Required Software:
+ - `g++` compiler
+ - `make`
 
-You can set the name of inputfile by using option -i .
-$ ./gcis_uni -i <inputfile>
-You can set the name of outputfile by using option -o .
-$ ./gcis_uni -o <outputfile>
-
-Default inputfile is "index", 
-Default outputfile is "codeindex".(it works with no option.)
-
------idx_uni--------------------------------------------------
-
-You can test pattern matching of gcis-uni with the following command :
-$./idx_uni -q <queryfile>
-
-All Option(-i -o -m -r -l) is same as idx_nep. For example,
-$ ./idx_nep -q inputsample.txt -m 3 -r 10 -l 100
-searches 10 ramdom patterns of length 100 in inputsample.txt .
-
-you can edit variants in source file "idx_uni.cpp", to some settings
-[MMODE]
-use to select query.
-0 : open "query.txt" in this folder, and regard it as a pattern and search it.
-1 : open qname(variants defined in line 26), and select a position in it regularly, and search  
-the pattern of length [MRANDBASE] ~ [MRANDBASE]+[MRANDRANGE]. repeat [MREP] times.
-2 : open qname, and search the pattern of [MLONG], starts at [MSTART].
-3 : same of 1, but a starting position is selected randomly.
-4 : open "query.txt" in this folder, and regard it as a sequence of 10 patterns, and search it.
-5 : not used
-
-[CHECKFLAG]
-if 1, program will checks the occurrence (open qname, and seek the locations GCIS answered)
-
-[DEBUGFLAG]
-if 1, all of the process of pattern matching is written in terminal.
+Obtained Programs:
+ - `gcis_nep_build` : builds gcis-nep index
+ - `gcis_nep_locate`: locates the occurrences of a pattern with gcis-nep index
+ - `gcis_uni_build` : builds gcis-uni index
+ - `gcis_uni_locate` : locates the occurrences of a pattern with gcis-uni
 
 
------genpattern--------------------------------------------------
+## 🏗️ Index Construction
+Use either `gcis_nep_build` or `gcis_uni_build` for building our index data structure.
 
-You can make a pattern file of your dataset with the following command : 
-$ ./genpattern -i <inputfile>
-"query_automake.txt" will be generated in this folder, and patterns are written in it.
+Parameters:  `-i text-input [-o index-outputfile]`
+ - `-i text-input` : the text input
+ - `-o index-outputfile`: optional name of the index file. Defaults to `index`.
+`
 
-You can set the name of output by using option -o instead of "query_automake.txt".
-$ ./genpattern -i <inputfile> -o <outputfile>
-You can set the number of query by using option -r.
-10 is used by default.(defined 'MREP' in this code.)
-$ ./genpattern -i <inputfile> -o <outputfile> -r <times>
-You can set the length of pattern by using option -l. 
-100 is used by default.(defined 'MLONG' in this code.)
-$ ./genpattern -i <inputfile> -o <outputfile> -l <length>
 
-For example, 
-$ ./genpattern -i inputsample.txt -o query.txt -l 100 -r 10
-writes 10 ramdom patterns of length 100 from inputsample.txt to query.txt.
+## 🖨️ Generate a Pattern File
+Our indexes use a pattern file as input for a locate query.
+You can either create manually such a file, use the original text input as pattern file, or generate a pattern file with our handy tool `genpattern`, which works as follows:
 
-you can edit variants in source file "makequery.cpp", to some settings
+Syntax: `genpattern -i inputfile [-o output-patternfile] [-l length] [-r number]`
 
-[MLONG]
-the length of patterns ( default <length> )
-[MREP]
-the number of patterns written in <outputfile> ( default <times> )
+Parameters:
+- `-i`: the input text from which to extract the patterns
+- `-r`: the number of patterns to extract (defaults to `10`)
+- `-l`: the length of each pattern (defaults to `100`)
+- `-o`: output pattern file name (defaults to `query_automake.txt`)
+
+
+## 🔎 Locate Query
+After index construction we can perform a locate query with a given pattern file. Note that we must use the same gcis-variant (nep or uni) for indexing and querying, otherwise we obtain a segmentation fault.
+The respective programs are `gcis_nep_locate` and `gcis_uni_locate`, which share the following syntax:
+
+Syntax: `-q patternfile [-m mode] [-i indexfile] [-r number] [-l length] [-s start]`
+
+The most important flag is `-m` for specifying how the patternfile `-q` should be treated. 
+Modes 1, 2 and 3 assume that `patternfile` is the same as the text file on which the index has been built
+
+Mode `-m` (defaults to `3`):
+- 0 : treat `patternfile` as a single pattern string
+- 1 : extracts randomly pattern from `patternfile` with a fixed initial random seed 
+- 2 : extracts a single pattern at `-s` with length `-l`
+- 3 : same of `1`, but the starting position `-s` is selected randomly
+- 4 : regard `patternfile` as a consecutive sequence of `-r` patterns, and query each of them
+
+
+Other Parameters:
+- `-q`: the input text from which to read the patterns
+- `-r`: the number of patterns (defaults to `10`)
+- `-l`: the length of each pattern (defaults to `100`)
+- `-s`: start position in `patternfile` from where to read patterns
+- `-i`: the filename of the index (defauls to `index`) 
+
+
+## 🎌 Compile Flags
+Our source files use the following preprocessor flags that can change the behavior of the execution as follows:
+
+#### `#define DEBUGFLAG`
+If enabled (set to `1`) the program works in verbose mode.
+
+### Index Construction Compile Flags
+- `#define OVERTRANSFORM`: Specifies a lower bound on the number of recursions of the GCIS factorization. Usually, our algorithm stops the recursion whenever the resulting index file size would get larger when performing an additional recursion step. A non-zero number `n` will prevent this behavior for the first `n` recursion steps.
+- `#define TRANSTIMES`: Specifies an upper bound on the number of recursions of the GCIS factorization. This lets the factorization prematurely end when `TRANSTIMES`
+recursions are reached. 
 
 
 
+### Locate Compile Flags
+- `#define CHECKFLAG`: If enabled, the program validates each reported occurrence by **assuming that the given query file is actually the text on which the index has been built. This flag makes therefore only sense for the modes 1,2, or 3.**
 
+
+## Limitations
+ - tested only with byte alphabet
+ - tested with Arch Linux and gcc version 11.1.0
+
+
+## 📚 References
+- Tooru Akagi, Dominik Köppl, Yuto Nakashima, Shunsuke Inenaga, Hideo Bannai, Masayuki Takeda: [Grammar Index By Induced Suffix Sorting. CoRR abs/2105.13744 (2021)](https://arxiv.org/abs/2105.13744)
+- Daniel Saad Nogueira Nunes, Felipe A. Louza, Simon Gog, Mauricio Ayala-Rincón, Gonzalo Navarro: [A Grammar Compression Algorithm Based on Induced Suffix Sorting. DCC 2018: 42-51](https://doi.org/10.1109/DCC.2018.00012)
