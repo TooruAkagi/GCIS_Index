@@ -47,7 +47,7 @@ While `gcis_nep_build` builds the index directly from a plain text file, `gcis_u
 Parameters:  `-i input-file [-o index-outputfile]`
  - `-i input-file` : this is either the plain text input for `gcis_nep_build` or the `gcis_nep` index file for `gcis_uni_build`
  - `-o index-outputfile`: optional name of the index file. Defaults to `index`.
-`
+
 
 
 ## 🖨️ Generate a Pattern File
@@ -85,7 +85,7 @@ Other Parameters:
 - `-r`: the number of patterns (defaults to `10`)
 - `-l`: the length of each pattern (defaults to `100`)
 - `-s`: start position in `patternfile` from where to read patterns
-- `-i`: the filename of the index (defauls to `index`) 
+- `-i`: the filename of the index (defaults to `index` or `codeindex` for `gcis_nep` and `gcis_uni`, respectively) 
 
 ## ✔️ Locate Output
 
