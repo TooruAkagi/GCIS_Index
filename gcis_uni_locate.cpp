@@ -11,7 +11,7 @@
 #define MMODE 3 //default mode
 #define MLONG 100 //default length
 #define MREP 10 //default number of query
-#define MSTART 11302 //for mode 2
+#define MSTART 113 //for mode 2
 #define CHECKFLAG 0 //if 1, check answers
 #define DEBUGFLAG 0 //if 1, show the process
 //MMODE = 
@@ -28,7 +28,7 @@ char defaultinname[] = "codeindex";
 int runmode = -1; //mode
 int plength = -1; //patternlength
 int querysuu = -1; //the number of query
-
+int qstart = -1;
 int checkpz[5];
 int vain=0;
 int cheatlen[11] = {512,256,128,64,32,16,8,4,2,1,0};
@@ -886,13 +886,12 @@ int findinNS(int *m,int startm,int mrlen,int round,int *kmpc,int *B1,int *B2,int
                         int tk = rpsck(m,Ls,B1,e2,loops-1);
                         if(DEBUGFLAG==1){if(tk==-1){printf("\nこれはコアではない2");}}
                         if(tk==0){
-                            printf("左OK");
                             int e[3] = {NS[y8+mrlen]+dc2s[loops-1],NS[y8+mrlen+1]+dc2s[loops-1],NS[y8+mrlen+2]+dc2s[loops-1]};
                             tk = psck(m,Rs,B2,e,loops-1);
                             if(DEBUGFLAG==1){if(tk==-1){printf("\nこれはコアではない");}}
                             if(tk==0){ //左右も完璧に合ってた
                                 if(DEBUGFLAG==1){printf("答え");}
-                                printf(" %d",kpofs-ocofs);
+                                //printf(" %d",kpofs-ocofs);
                                 if(ans<1000 && CHECKFLAG==1){checkans[ans]=kpofs-ocofs;}
                                 ans++;
                             }
@@ -903,9 +902,9 @@ int findinNS(int *m,int startm,int mrlen,int round,int *kmpc,int *B1,int *B2,int
                 }
                 else{ //不一致
                     if(tg!=0){
-                        printf("\n%d[%d > %d]",y8,tg,kmpc[tg]);
+                        //printf("\n%d[%d > %d]",y8,tg,kmpc[tg]);
                         for(int u=0;u<tg-kmpc[tg]+1;u++){
-                            printf("(+%d)",D3access(NS[u+y8]+dc2s[loops-1]));
+                            //printf("(+%d)",D3access(NS[u+y8]+dc2s[loops-1]));
                             kpofs+=D3access(NS[u+y8]+dc2s[loops-1]);
                         }
                         y8+=tg - kmpc[tg];
@@ -1456,7 +1455,7 @@ int qrmload(int *m,int c,int jo,int *anst){ //mの中に，english.001.2 の中�
     int i = 0;
     jswt = 0;
     int rlen = rand()%(qsize-c);
-    if(runmode==2){rlen = MSTART;}
+    if(runmode==2){rlen = qstart;}
     anst[jo] = rlen;
     fseek(fp,rlen,SEEK_SET);
     printf("\nrlen[%d]から[%d]文字(%lld)\n[",rlen,c,qsize);
@@ -1476,10 +1475,6 @@ int qrmload(int *m,int c,int jo,int *anst){ //mの中に，english.001.2 の中�
 
 int bitload(bool *ar,unsigned char a2,int p,int mx){
     int a = a2;
-    //位置pから8個分bit配列arを埋めるが，mxを超えたら-1を返して帰還する．
-    //if(mx-100<p){
-    //    printf("\nbitload(%d,%d,%d,%d)",a,p,mx,Sizelist[9]);
-    //}
     //if(mote==1){printf("<%d>",a);}
     ar[p+0] = a/128;a-=ar[p+0]*128;
     //if(mote==1){printf("<%d>",a);}
@@ -1522,18 +1517,18 @@ int qrmreload(int *m,int c){ //mの中に，english.001.2 の中からc文字を
 int shelp(){
     printf("--Simple Usage------------------\n");
     printf("\nRead 'codeindex' and search using <queryfile>. \n");
-    printf(": ./idx_uni_locate -q <queryfile>\n");
+    printf(": ./gcis_uni_locate -q <queryfile>\n");
     printf("\nYou can set the indexfile by using option -i. \n");
-    printf(": ./idx_uni_locate -i <indexfile> -q <queryfile>\n");
+    printf(": ./gcis_uni_locate -i <indexfile> -q <queryfile>\n");
     printf("\nYou can set the location mode 0 ~ 4 by using option -m. \n");
     printf("mode 3 is used by default.(defined 'MMODE' in this code.)\n");
-    printf(": ./idx_uni_locate -i <indexfile> -q <queryfile> -m <mode>\n");
+    printf(": ./gcis_uni_locate -i <indexfile> -q <queryfile> -m <mode>\n");
     printf("\nYou can set the number of query by using option -r. \n");
     printf("10 is used by default.(defined 'MREP' in this code.)\n");
-    printf(": ./idx_uni_locate -i <indexfile> -q <queryfile> -m <mode> -r <times>\n");
+    printf(": ./gcis_uni_locate -i <indexfile> -q <queryfile> -m <mode> -r <times>\n");
     printf("\nYou can set the length of pattern by using option -l. \n");
     printf("10 is used by default.(defined 'MLONG' in this code.)\n");
-    printf(": ./idx_uni_locate -i <indexfile> -q <queryfile> -m <mode> -l <length>\n");
+    printf(": ./gcis_uni_locate -i <indexfile> -q <queryfile> -m <mode> -l <length>\n");
     printf("\n");
     printf("\n");
     return 0;
@@ -1582,6 +1577,16 @@ int main(int argc, char *argv[]){
                 else{break;}
             }
         }
+        if('s'==argv[i][1]){ //mode
+            qstart=0;
+            for(int k = 0;k<strlen(argv[i+1]);k++){
+                if(10 > argv[i+1][k]-'0' && argv[i+1][k]-'0'>=0){
+                qstart *=10;
+                qstart += argv[i+1][k] - '0';
+                }
+                else{break;}
+            }
+        }
         if('h'==argv[i][1]){shelp();return 0;} //help
         i++;continue;
       }
@@ -1595,6 +1600,7 @@ int main(int argc, char *argv[]){
     if(runmode==-1){runmode=MMODE;}
     if(plength==-1){plength=MLONG;}
     if(querysuu==-1){querysuu=MREP;}
+    if(qstart==-1){qstart=MSTART;}
     FILE *fp;
     dcs[0] = 0;dc2s[0] = 0;ccs[0] = 0;cc2s[0] = 0; 
     unsigned char chr;
@@ -1609,7 +1615,7 @@ int main(int argc, char *argv[]){
         fscanf(fp,"%c",&chr);a += chr*65536*256;
         if(flag==11 && w==0){
             //printf("\n[%d]:%u [%d,%d]",flag,a,dc2s[loops]-Sizelist[2],D_3[w]);
-            for(int yj=0;yj<loops;yj++){printf("(%d)",cc2s[yj]);}
+            //for(int yj=0;yj<loops;yj++){printf("(%d)",cc2s[yj]);}
             exit(1);
         }
         if(flag==10){NS[w]=a;w++;if(w==Sizelist[0]){flag++;w=0;}}
@@ -1635,7 +1641,7 @@ int main(int argc, char *argv[]){
         }
         if(flag==2){dcs[w]=a;if(w==loops){flag++;w=1;}else{w++;}}
         if(flag==1){
-            Sizelist[w]=a;printf("\nSizelist[%d] = %d",w,a);
+            Sizelist[w]=a;
             if(w==10){
                 flag++;w=1; //各種サイズを設定
                 NS = (int*)malloc(4*Sizelist[0]);
@@ -1651,8 +1657,6 @@ int main(int argc, char *argv[]){
                 d2top = (bool*)malloc(Sizelist[9]);
             }else{w++;}}
         if(flag==0){loops=a;flag++;}
-        //fseek(fp,16,SEEK_CUR);
-
     }
     //printf("\n-finishing 4byte part-\n");
     if(Sizelist[2]-Sizelist[1]==0){flag++;w=0;} //D_3mはないので，flagを一つ進める

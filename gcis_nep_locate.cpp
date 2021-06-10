@@ -28,6 +28,7 @@ char defaultqname[] = "inputsample.txt";
 int runmode = -1; //mode
 int plength = -1; //patternlength
 int querysuu = -1; //the number of query
+int qstart = -1;
 int checkans[1000];
 int checkpz[5];
 int occart[10]; //-1,-1,X,ofc,-1,-1,-1
@@ -1194,7 +1195,7 @@ int qrmload(int c,int jo,int *anst){ //mの中に，english.001.2 の中からc�
     int i = 0;
     jswt = 0;
     int rlen = rand()%(qsize-c);
-    if(runmode==2){rlen = MSTART;}
+    if(runmode==2){rlen = qstart;}
     anst[jo] = rlen;
     fseek(fp,rlen,SEEK_SET); //指定したシークまで移動する
     printf("\nquery%d : [%lld]rlen[%d]から[%d]文字(%lld)\n[",jo,qsize,rlen,c,qsize);
@@ -1213,18 +1214,18 @@ int qrmload(int c,int jo,int *anst){ //mの中に，english.001.2 の中からc�
 int shelp(){
     printf("--Simple Usage------------------\n");
     printf("\nRead 'codeindex' and search using <queryfile>. \n");
-    printf(": ./idx_nep_locate -q <queryfile>\n");
+    printf(": ./gcis_nep_locate -q <queryfile>\n");
     printf("\nYou can set the indexfile by using option -i. \n");
-    printf(": ./idx_nep_locate -i <indexfile> -q <queryfile>\n");
+    printf(": ./gcis_nep_locate -i <indexfile> -q <queryfile>\n");
     printf("\nYou can set the location mode 0 ~ 4 by using option -m. \n");
     printf("mode 3 is used by default.(defined 'MMODE' in this code.)\n");
-    printf(": ./idx_nep_locate -i <indexfile> -q <queryfile> -m <mode>\n");
+    printf(": ./gcis_nep_locate -i <indexfile> -q <queryfile> -m <mode>\n");
     printf("\nYou can set the number of query by using option -r. \n");
     printf("10 is used by default.(defined 'MREP' in this code.)\n");
-    printf(": ./idx_nep_locate -i <indexfile> -q <queryfile> -m <mode> -r <times>\n");
+    printf(": ./gcis_nep_locate -i <indexfile> -q <queryfile> -m <mode> -r <times>\n");
     printf("\nYou can set the length of pattern by using option -l. \n");
     printf("10 is used by default.(defined 'MLONG' in this code.)\n");
-    printf(": ./idx_nep_locate -i <indexfile> -q <queryfile> -m <mode> -l <length>\n");
+    printf(": ./gcis_nep_locate -i <indexfile> -q <queryfile> -m <mode> -l <length>\n");
     printf("\n");
     printf("\n");
     return 0;
@@ -1275,6 +1276,16 @@ int main(int argc, char *argv[])
                 else{break;}
             }
         }
+        if('s'==argv[i][1]){ //mode
+            qstart=0;
+            for(int k = 0;k<strlen(argv[i+1]);k++){
+                if(10 > argv[i+1][k]-'0' && argv[i+1][k]-'0'>=0){
+                qstart *=10;
+                qstart += argv[i+1][k] - '0';
+                }
+                else{break;}
+            }
+        }
         if('h'==argv[i][1]){shelp();return 0;} //help
         i++;continue;
       }
@@ -1288,6 +1299,7 @@ int main(int argc, char *argv[])
     if(runmode==-1){runmode=MMODE;}
     if(plength==-1){plength=MLONG;}
     if(querysuu==-1){querysuu=MREP;}
+    if(qstart==-1){qstart=2;}
 
     long long int sps = 0;
     long long int spsmax = 0;
