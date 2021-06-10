@@ -891,7 +891,7 @@ int findinNS(int *m,int startm,int mrlen,int round,int *kmpc,int *B1,int *B2,int
                             if(DEBUGFLAG==1){if(tk==-1){printf("\nこれはコアではない");}}
                             if(tk==0){ //左右も完璧に合ってた
                                 if(DEBUGFLAG==1){printf("答え");}
-                                //printf(" %d",kpofs-ocofs);
+                                printf(" %d",kpofs-ocofs);
                                 if(ans<1000 && CHECKFLAG==1){checkans[ans]=kpofs-ocofs;}
                                 ans++;
                             }
@@ -1779,7 +1779,7 @@ int main(int argc, char *argv[]){
         }
         printf("avarage time : %lf[ms]",avt/querysuu);
         for(int jo=0;jo<querysuu;jo++){
-            printf("\n(P-length : %d from position %d[%d trans] / ans:%d / core:%d / time %lf[ms])",ancl[jo][2],anst[jo],ancl[jo][3],ancl[jo][0],ancl[jo][1],ancd[jo]);
+            printf("\n(P-length : %d [%d trans] / ans:%d / core:%d / time %lf[ms])",ancl[jo][2],ancl[jo][3],ancl[jo][0],ancl[jo][1],ancd[jo]);
             }
     }
     if(runmode==0){

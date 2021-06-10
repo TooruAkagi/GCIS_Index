@@ -1421,7 +1421,7 @@ int main(int argc, char *argv[])
         }
         printf("avarage time : %lf[ms]",avt/querysuu);
         for(int jo=0;jo<querysuu;jo++){
-            printf("\n(P-length : %d from position %d[%d trans] / ans:%d / core:%d / time %lf[ms])",ancl[jo][2],anst[jo],ancl[jo][3],ancl[jo][0],ancl[jo][1],ancd[jo]);
+            printf("\n(P-length : %d [%d trans] / ans:%d / core:%d / time %lf[ms])",ancl[jo][2],ancl[jo][3],ancl[jo][0],ancl[jo][1],ancd[jo]);
             }
     }
     if(runmode==0){
