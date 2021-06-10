@@ -11,7 +11,7 @@
 #define MMODE 3 //default mode
 #define MLONG 100 //default length
 #define MREP 10 //default number of query
-#define MSTART 113 //for mode 2
+#define MSTART 0 //for mode 2
 #define CHECKFLAG 0 //if 1, check answers
 #define DEBUGFLAG 0 //if 1, show the process
 //MMODE = 

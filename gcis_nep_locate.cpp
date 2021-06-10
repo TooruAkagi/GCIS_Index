@@ -12,7 +12,7 @@
 #define MMODE 3
 #define MLONG 100
 #define MREP 10
-#define MSTART 10162 // for mode 2
+#define MSTART 0 // for mode 2
 #define CHECKFLAG 0 //if 1, check answers
 #define DEBUGFLAG 0 //if 1, show the process
 //MMODE = 
