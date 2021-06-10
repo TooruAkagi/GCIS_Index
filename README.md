@@ -12,12 +12,10 @@ git clone https://github.com/TooruAkagi/GCIS_Index.git
 cd GCIS_Index
 make
 ./genpattern -i inputsample.txt -o query.txt -l 100 -r 10
-#gcis_nep
 ./gcis_nep_build -i inputsample.txt -o inputsample.gcis.nep.index
 ./gcis_nep_locate -i inputsample.gcis.nep.index -q  query.txt -m 4 -l 100 -r 10
-#gcis uni
-./gcis_uni_build -i inputsample.txt -o inputsample.gcis.nep.index
-./gcis_uni_locate -i inputsample.gcis.nep.index -q  query.txt -m 4 -l 100 -r 10
+./gcis_uni_build -i inputsample.gcis.nep.index -o inputsample.gcis.uni.index
+./gcis_uni_locate -i inputsample.gcis.uni.index -q  query.txt -m 4 -l 100 -r 10
 ```
 
 In what follows, we demystify the meaning of the above lines.
@@ -44,9 +42,10 @@ Obtained Programs:
 
 ## 🏗️ Index Construction
 Use either `gcis_nep_build` or `gcis_uni_build` for building our index data structure.
+While `gcis_nep_build` builds the index directly from a plain text file, `gcis_uni_build` transforms the index built by `gcis_nep_build` to `gcis_uni`.
 
-Parameters:  `-i text-input [-o index-outputfile]`
- - `-i text-input` : the text input
+Parameters:  `-i input-file [-o index-outputfile]`
+ - `-i input-file` : this is either the plain text input for `gcis_nep_build` or the `gcis_nep` index file for `gcis_uni_build`
  - `-o index-outputfile`: optional name of the index file. Defaults to `index`.
 `
 
@@ -87,6 +86,18 @@ Other Parameters:
 - `-l`: the length of each pattern (defaults to `100`)
 - `-s`: start position in `patternfile` from where to read patterns
 - `-i`: the filename of the index (defauls to `index`) 
+
+## ✔️ Locate Output
+
+Locate returns the starting positions of all occurrences of each pattern.
+the output looks like this:
+```
+[length of the pattern : 100] / (ans:1 / core:0 ) : time 0.036000[ms]
+]パターン変形回数:2
+ 1947
+```
+Here, we have a pattern of length 100, it has `ans` occurrences, retrieved in `0.036000 ms`.
+THe starting position of this occurrence is at `1947` in the text.
 
 
 ## 🎌 Compile Flags
