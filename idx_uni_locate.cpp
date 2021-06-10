@@ -10,10 +10,10 @@
 
 #define MMODE 3 //default mode
 #define MLONG 100 //default length
-#define MREP 20 //default number of query
-#define MSTART 11302
-#define CHECKFLAG 1 //if 1, check answers
-#define DEBUGFLAG 1 //if 1, show the process
+#define MREP 10 //default number of query
+#define MSTART 11302 //for mode 2
+#define CHECKFLAG 0 //if 1, check answers
+#define DEBUGFLAG 0 //if 1, show the process
 //MMODE = 
 // 0 : open [queryfile], regard it as a pattern
 // 1 : open [queryfile], select some ramdom strings of length [MLONG] in the file, and regard it as patterns
@@ -28,8 +28,7 @@ char defaultinname[] = "codeindex";
 int runmode = -1; //mode
 int plength = -1; //patternlength
 int querysuu = -1; //the number of query
-int ancl[MREP][5];
-double ancd[MREP];
+
 int checkpz[5];
 int vain=0;
 int cheatlen[11] = {512,256,128,64,32,16,8,4,2,1,0};
@@ -1445,7 +1444,7 @@ int queryload(int *m){
     return (int)qsize;
 }
 
-int qrmload(int *m,int c,int jo){ //mの中に，english.001.2 の中からc文字をランダムに選択して保存する
+int qrmload(int *m,int c,int jo,int *anst){ //mの中に，english.001.2 の中からc文字をランダムに選択して保存する
     char chr;
     FILE *fp;
     long long int qsize = std::filesystem::file_size(qname);
@@ -1458,7 +1457,7 @@ int qrmload(int *m,int c,int jo){ //mの中に，english.001.2 の中からc文�
     jswt = 0;
     int rlen = rand()%(qsize-c);
     if(runmode==2){rlen = MSTART;}
-    ancl[jo][4] = rlen;
+    anst[jo] = rlen;
     fseek(fp,rlen,SEEK_SET);
     printf("\nrlen[%d]から[%d]文字(%lld)\n[",rlen,c,qsize);
     if(CHECKFLAG == 1){checkpz[0]=rlen;checkpz[1]=c;} //記憶
@@ -1523,18 +1522,18 @@ int qrmreload(int *m,int c){ //mの中に，english.001.2 の中からc文字を
 int shelp(){
     printf("--Simple Usage------------------\n");
     printf("\nRead 'codeindex' and search using <queryfile>. \n");
-    printf(": ./idx_uni -q <queryfile>\n");
+    printf(": ./idx_uni_locate -q <queryfile>\n");
     printf("\nYou can set the indexfile by using option -i. \n");
-    printf(": ./idx_uni -i <indexfile> -q <queryfile>\n");
+    printf(": ./idx_uni_locate -i <indexfile> -q <queryfile>\n");
     printf("\nYou can set the location mode 0 ~ 4 by using option -m. \n");
     printf("mode 3 is used by default.(defined 'MMODE' in this code.)\n");
-    printf(": ./idx_uni -i <indexfile> -q <queryfile> -m <mode>\n");
+    printf(": ./idx_uni_locate -i <indexfile> -q <queryfile> -m <mode>\n");
     printf("\nYou can set the number of query by using option -r. \n");
     printf("10 is used by default.(defined 'MREP' in this code.)\n");
-    printf(": ./idx_uni -i <indexfile> -q <queryfile> -m <mode> -r <times>\n");
+    printf(": ./idx_uni_locate -i <indexfile> -q <queryfile> -m <mode> -r <times>\n");
     printf("\nYou can set the length of pattern by using option -l. \n");
     printf("10 is used by default.(defined 'MLONG' in this code.)\n");
-    printf(": ./idx_uni -i <indexfile> -q <queryfile> -m <mode> -l <length>\n");
+    printf(": ./idx_uni_locate -i <indexfile> -q <queryfile> -m <mode> -l <length>\n");
     printf("\n");
     printf("\n");
     return 0;
@@ -1698,6 +1697,9 @@ int main(int argc, char *argv[]){
     int popo = 5;
     int ujk = ccs[popo]; //ccs[popo+1]-ccs[popo]+2 ccs[popo+1]-ccs[popo]+2
     
+    int ancl[querysuu][5];
+    int anst[querysuu];
+    double ancd[querysuu];
     int *m;
     int msize = 10000;
     m = (int*)malloc(4*msize);
@@ -1705,7 +1707,7 @@ int main(int argc, char *argv[]){
     double avt = 0;
     int jogaipar = 0;
     if(runmode==2){
-        msize = qrmload(m,plength,0);
+        msize = qrmload(m,plength,0,anst);
         clock_t timesb = clock();
         patternmatching1(m,msize,loops);
         clock_t timee = clock();
@@ -1713,17 +1715,17 @@ int main(int argc, char *argv[]){
         printf("\n[length of the pattern : %d] / ans:%d / core:%d : time %lf[ms]\n",msize,ans,coreans,time);
         printf("\nvain = %d",vain);
         if(CHECKFLAG==1){
-            msize = qrmload(m,plength,0);
+            msize = qrmload(m,plength,0,anst);
             anscheck(msize,m);
         }
     }
     if(runmode==1 || runmode==3){
         double pertime = 0.00;
         if(runmode==3){srand((unsigned int)time(NULL));}
-        for(int jo = 0;jo < MREP;jo++){
+        for(int jo = 0;jo < querysuu;jo++){
             int ralen = plength;
             if(runmode==1){ralen = plength;}
-            msize = qrmload(m,ralen,jo);
+            msize = qrmload(m,ralen,jo,anst);
             clock_t timesb = clock();
             patternmatching1(m,msize,loops);
             clock_t timee = clock();
@@ -1744,13 +1746,11 @@ int main(int argc, char *argv[]){
             }
             ans=0;
         }
-        printf("avarage time : %lf[ms]",avt/MREP);
-        printf("除外数 %d / %d",jogaipar,jogaipar+MREP);
-        for(int jo=0;jo<MREP;jo++){
-            printf("\n(%d : P-length : %d from position %d[%d trans] / ans:%d / core:%d / time %lf[ms])",jo,ancl[jo][2],ancl[jo][4],ancl[jo][3],ancl[jo][0],ancl[jo][1],ancd[jo]);
-            //printf("\n%d\n%d\n%d\n%d\n%d\n%lf",ancl[jo][2],ancl[jo][4],ancl[jo][3],ancl[jo][0],ancl[jo][1],ancd[jo]);
-        }
-        printf("\n[transformation time : %.3f %]\n",pertime/MREP);
+        printf("avarage time : %lf[ms]",avt/querysuu);
+        for(int jo=0;jo<querysuu;jo++){
+            printf("\n(%d : P-length : %d from position %d[%d trans] / ans:%d / core:%d / time %lf[ms])",jo,ancl[jo][2],anst[jo],ancl[jo][3],ancl[jo][0],ancl[jo][1],ancd[jo]);
+            }
+        printf("\n[transformation time : %.3f %]\n",pertime/querysuu);
     }
     if(runmode==4){
         for(int jo = 0;jo < querysuu;jo++){
@@ -1775,9 +1775,8 @@ int main(int argc, char *argv[]){
         }
         printf("avarage time : %lf[ms]",avt/querysuu);
         for(int jo=0;jo<querysuu;jo++){
-            printf("\n(P-length : %d from position %d[%d trans] / ans:%d / core:%d / time %lf[ms])",ancl[jo][2],ancl[jo][4],ancl[jo][3],ancl[jo][0],ancl[jo][1],ancd[jo]);
-            //printf("\n%d\n%d\n%d\n%d\n%d\n%lf",ancl[jo][2],ancl[jo][4],ancl[jo][3],ancl[jo][0],ancl[jo][1],ancd[jo]);
-        }
+            printf("\n(P-length : %d from position %d[%d trans] / ans:%d / core:%d / time %lf[ms])",ancl[jo][2],anst[jo],ancl[jo][3],ancl[jo][0],ancl[jo][1],ancd[jo]);
+            }
     }
     if(runmode==0){
         msize = queryload(m);

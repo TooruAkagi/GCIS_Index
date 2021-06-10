@@ -9,8 +9,8 @@
 #include <filesystem>
 #include <cstring> //depends on your enviroment
 
-#define MLONG 1000
-#define MREP 100
+#define MLONG 100
+#define MREP 10
 
 char *fname,*wname;
 char defaultfname[] = "inputsample";

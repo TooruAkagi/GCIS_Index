@@ -9,12 +9,12 @@
 #include <filesystem>
 #include <cstring> //depends on your enviroment
 
-#define MMODE 2
-#define MLONG 17
-#define MREP 20
-#define MSTART 10162
-#define CHECKFLAG 1 //if 1, check answers
-#define DEBUGFLAG 1 //if 1, show the process
+#define MMODE 3
+#define MLONG 100
+#define MREP 10
+#define MSTART 10162 // for mode 2
+#define CHECKFLAG 0 //if 1, check answers
+#define DEBUGFLAG 0 //if 1, show the process
 //MMODE = 
 // 0 : open [queryfile], regard it as a pattern
 // 1 : open [queryfile], select some ramdom strings of length [MLONG] in the file, and regard it as patterns
@@ -31,11 +31,9 @@ int querysuu = -1; //the number of query
 int checkans[1000];
 int checkpz[5];
 int occart[10]; //-1,-1,X,ofc,-1,-1,-1
-int ancl[MREP][5];
 int occart2[30][10]; //高さ30に対して(左0,左1,分割番号,ofs,右1,右2,右3,測定内容)
 // 0 = *, 1 = B,2 = AB,3 = BC,4 = ABC
-int coredata[10]; //Aの判定,Aの開始位置,Aの長さ,Bの判定[1],Bの開始位置,Bの長さ,Cの判定,Cの開始位置,Cの長さ,
-double ancd[MREP];
+int coredata[10]; //Aの判定,Aの開始位置,Aの長さ,Bの判定[1],Bの開始位置,Bの長さ,Cの判定,Cの開始位置,Cの長さ
 int dcs[18]; //[i] = starting position of floor-i's first purse in the Dictionary
 int dc2s[18]; //[i] = starting number of floor-i's first number in the Dictionary
 int dbg = 0; //for debuging
@@ -1185,7 +1183,7 @@ int qrmloadset(int jo){ //c番目を読む
     return c;
 }
 
-int qrmload(int c,int jo){ //mの中に，english.001.2 の中からc文字をランダムに選択して保存する
+int qrmload(int c,int jo,int *anst){ //mの中に，english.001.2 の中からc文字をランダムに選択して保存する
     char chr;FILE *fp;
     long long int qsize = std::filesystem::file_size(qname); //qsizeには，ファイルのサイズが書かれているはず
     fp = fopen(qname, "r"); // open file or return null
@@ -1197,7 +1195,7 @@ int qrmload(int c,int jo){ //mの中に，english.001.2 の中からc文字を�
     jswt = 0;
     int rlen = rand()%(qsize-c);
     if(runmode==2){rlen = MSTART;}
-    ancl[jo][4] = rlen;
+    anst[jo] = rlen;
     fseek(fp,rlen,SEEK_SET); //指定したシークまで移動する
     printf("\nquery%d : [%lld]rlen[%d]から[%d]文字(%lld)\n[",jo,qsize,rlen,c,qsize);
     if(CHECKFLAG == 1){checkpz[0]=rlen;checkpz[1]=c;}
@@ -1215,18 +1213,18 @@ int qrmload(int c,int jo){ //mの中に，english.001.2 の中からc文字を�
 int shelp(){
     printf("--Simple Usage------------------\n");
     printf("\nRead 'codeindex' and search using <queryfile>. \n");
-    printf(": ./idx_nep -q <queryfile>\n");
+    printf(": ./idx_nep_locate -q <queryfile>\n");
     printf("\nYou can set the indexfile by using option -i. \n");
-    printf(": ./idx_nep -i <indexfile> -q <queryfile>\n");
+    printf(": ./idx_nep_locate -i <indexfile> -q <queryfile>\n");
     printf("\nYou can set the location mode 0 ~ 4 by using option -m. \n");
     printf("mode 3 is used by default.(defined 'MMODE' in this code.)\n");
-    printf(": ./idx_nep -i <indexfile> -q <queryfile> -m <mode>\n");
+    printf(": ./idx_nep_locate -i <indexfile> -q <queryfile> -m <mode>\n");
     printf("\nYou can set the number of query by using option -r. \n");
     printf("10 is used by default.(defined 'MREP' in this code.)\n");
-    printf(": ./idx_nep -i <indexfile> -q <queryfile> -m <mode> -r <times>\n");
+    printf(": ./idx_nep_locate -i <indexfile> -q <queryfile> -m <mode> -r <times>\n");
     printf("\nYou can set the length of pattern by using option -l. \n");
     printf("10 is used by default.(defined 'MLONG' in this code.)\n");
-    printf(": ./idx_nep -i <indexfile> -q <queryfile> -m <mode> -l <length>\n");
+    printf(": ./idx_nep_locate -i <indexfile> -q <queryfile> -m <mode> -l <length>\n");
     printf("\n");
     printf("\n");
     return 0;
@@ -1329,6 +1327,9 @@ int main(int argc, char *argv[])
 
     }
     fclose(fp);
+    int ancl[querysuu][5];
+    int anst[querysuu];
+    double ancd[querysuu];
     pn = tm1;
     NSsize = pn;
     round=loops;
@@ -1336,14 +1337,14 @@ int main(int argc, char *argv[])
     double avt = 0;
     //int jogaipar = 0;
     if(runmode==2){
-        msize = qrmload(plength,0);
+        msize = qrmload(plength,0,anst);
         clock_t timesb = clock();
         patternmatching2(D,D_2,D_3,msize); 
         clock_t timee = clock();
         const double time = static_cast<double>(timee - timesb) / CLOCKS_PER_SEC * 1000.0;
         printf("\n[length of the pattern : %d] / (ans:%d / core:%d ) : time %lf[ms]\n",msize,ans,coreans,time);
         if(CHECKFLAG==1){
-            msize = qrmload(plength,0);
+            msize = qrmload(plength,0,anst);
             anscheck(msize);
         }
     }
@@ -1351,11 +1352,10 @@ int main(int argc, char *argv[])
         float avetransk = 0.00;
         double pertime = 0.00;
         if(runmode==3){srand((unsigned int)time(NULL));}
-        for(int jo = 0;jo < MREP;jo++){
+        for(int jo = 0;jo < querysuu;jo++){
             int ralen = plength;
             if(runmode==1){ralen = plength;}
-            msize = qrmload(ralen,jo);
-            //if(jswt==1){printf("\n除外");jogaipar++;jo--;continue;}
+            msize = qrmload(ralen,jo,anst);
             if(DEBUGFLAG==1){
                 printf("\n検索文字列:[");
                 for(int rek = 0;rek<ralen;rek++){printf("%c",m[rek]);}
@@ -1379,12 +1379,11 @@ int main(int argc, char *argv[])
                 anscheck(msize);
             }
         }
-        for(int jo=0;jo<MREP;jo++){
-            printf("\n(P-length : %d from position %d[%d trans] / ans:%d / core:%d / time %lf[ms])",ancl[jo][2],ancl[jo][4],ancl[jo][3],ancl[jo][0],ancl[jo][1],ancd[jo]);
-            //printf("\n%d\n%d\n%d\n%d\n%d\n%lf",ancl[jo][2],ancl[jo][4],ancl[jo][3],ancl[jo][0],ancl[jo][1],ancd[jo]);
-        }
-        printf("\navarage time : %lf[ms]\n avarage transform : %f times\n",avt/MREP,avetransk/MREP);
-        printf("[transformation time : %.3f %]\n",pertime/MREP);
+        for(int jo=0;jo<querysuu;jo++){
+            printf("\n(P-length : %d from position %d[%d trans] / ans:%d / core:%d / time %lf[ms])",ancl[jo][2],anst[jo],ancl[jo][3],ancl[jo][0],ancl[jo][1],ancd[jo]);
+            }
+        printf("\navarage time : %lf[ms]\n avarage transform : %f times\n",avt/querysuu,avetransk/querysuu);
+        printf("[transformation time : %.3f %]\n",pertime/querysuu);
     }
     if(runmode==4){
         for(int jo = 0;jo < querysuu;jo++){
@@ -1410,11 +1409,9 @@ int main(int argc, char *argv[])
         }
         printf("avarage time : %lf[ms]",avt/querysuu);
         for(int jo=0;jo<querysuu;jo++){
-            printf("\n(P-length : %d from position %d[%d trans] / ans:%d / core:%d / time %lf[ms])",ancl[jo][2],ancl[jo][4],ancl[jo][3],ancl[jo][0],ancl[jo][1],ancd[jo]);
-            //printf("\n%d\n%d\n%d\n%d\n%d\n%lf",ancl[jo][2],ancl[jo][4],ancl[jo][3],ancl[jo][0],ancl[jo][1],ancd[jo]);
-        }
+            printf("\n(P-length : %d from position %d[%d trans] / ans:%d / core:%d / time %lf[ms])",ancl[jo][2],anst[jo],ancl[jo][3],ancl[jo][0],ancl[jo][1],ancd[jo]);
+            }
     }
-    
     if(runmode==0){
         msize = queryload();
         clock_t timesb = clock();
@@ -1424,10 +1421,6 @@ int main(int argc, char *argv[])
         printf("\n[length of the pattern : %d] / (ans:%d / core:%d ) : time %lf[ms]\n",msize,ans,coreans,time);
         
     }
-    //exit(1);
-    //printf("space : %d bytes (%d,%d,%d)",dc2s[loops]*4*2+dcs[loops]*4+pn*4,dc2s[loops],dcs[loops],pn);
-    //printf("loop = %d",loops);
-    
     free(NS); 
     free(D); 
     free(D_2); 

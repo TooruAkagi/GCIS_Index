@@ -410,11 +410,11 @@ int shelp(){
     printf("\nRead 'index' and make 'codeindex'. \n");
     printf("This file needs for locating in idx_uni. \n");
     printf("Make sure that running 'gcis' and make file 'index' first before running 'gcis_uni'. \n");
-    printf(": ./gcis_uni \n");
+    printf(": ./gcis_uni_build \n");
     printf("\nYou can set the name of inputfile by using option -i. \n");
-    printf(": ./gcis_uni -i <inputfile>\n");
+    printf(": ./gcis_uni_build -i <inputfile>\n");
     printf("\nYou can set the name of outputfile by using option -o. \n");
-    printf(": ./gcis_uni -o <outputfile>\n");
+    printf(": ./gcis_uni_build -o <outputfile>\n");
     printf("\n");
     printf("\n");
     return 0;
