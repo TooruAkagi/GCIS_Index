@@ -30,7 +30,7 @@ make
 ```
 
 Required Software:
- - `g++` compiler
+ - `g++` compiler or `clang++`. Defaults to `g++`. Change with `make CXX=clang++`
  - `make`
 
 Obtained Programs:
